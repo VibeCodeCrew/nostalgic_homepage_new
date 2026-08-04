@@ -1,0 +1,103 @@
+/* ==================== DOOM (iframe-страница игры) ==================== */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Тонкая полоска с подсказкой управления поверх кадра игры */
+#doom-bar {
+    flex: 0 0 auto;
+    height: 22px;
+    line-height: 22px;
+    padding: 0 4px 0 8px;
+    background: linear-gradient(to bottom, #3a6ea5 0%, #245edb 8%, #1941a5 100%);
+    color: #fff;
+    font: 11px Tahoma, sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#doom-hints {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#doom-bar b {
+    color: #ffe27a;
+    font-weight: bold;
+}
+
+/* Кнопки правого края полоски: звук, музыка, отпускание мыши */
+#doom-buttons {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+#doom-bar button {
+    flex: 0 0 auto;
+    margin-left: 8px;
+    padding: 0 8px;
+    height: 16px;
+    line-height: 14px;
+    font: 10px Tahoma, sans-serif;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+#doom-bar button:hover {
+    background: rgba(255, 255, 255, 0.30);
+}
+
+#doom-bar button.off {
+    background: rgba(0, 0, 0, 0.35);
+    color: #ffe27a;
+}
+
+#canvas {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: block;
+    cursor: none;              /* мышь включена — курсор не нужен (плюс pointer lock) */
+    object-fit: contain;       /* сохраняем пропорции кадра 4:3 при любом размере окна */
+    image-rendering: pixelated; /* пиксельная чёткость, как в 1993-м */
+    outline: none;
+}
+
+/* Оверлей загрузки / старта поверх кадра игры */
+#doom-overlay {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px 22px;
+    background: rgba(0, 0, 0, 0.72);
+    border: 1px solid #555;
+    color: #e8e8e8;
+    font: 13px Tahoma, sans-serif;
+    text-align: center;
+    white-space: nowrap;
+    user-select: none;
+    cursor: pointer;
+}
+
+#doom-overlay[hidden] {
+    display: none;
+}

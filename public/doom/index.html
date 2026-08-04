@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>DOOM</title>
+<link rel="stylesheet" href="doom.css">
+</head>
+<body>
+<div id="doom-bar"><span id="doom-hints"><b>W/S</b> вперёд-назад&nbsp;· <b>A/D</b> стрейф&nbsp;· <b>&larr;&rarr;</b>/мышь поворот&nbsp;· <b>Пробел</b>/ЛКМ огонь&nbsp;· <b>F</b>/ПКМ использовать&nbsp;· <b>Shift</b> бег&nbsp;· <b>Tab</b> карта&nbsp;· <b>Esc</b> меню</span><span id="doom-buttons"><button id="sfx-toggle" type="button" title="Звуковые эффекты: сохраняется и применяется при запуске игры; в игре — Esc → Options → Sound Volume">Звук: вкл</button><button id="music-toggle" type="button" title="Музыка: сохраняется и применяется при запуске игры; в игре — Esc → Options → Sound Volume">Музыка: вкл</button><button id="mouse-toggle" type="button" title="Отпустить мышь (клавиша `): курсор перестаёт крутить камеру, можно работать с рабочим столом">Мышь: вкл</button></span></div>
+<canvas id="canvas" tabindex="-1"></canvas>
+<div id="doom-overlay">Загрузка DOOM…</div>
+<script src="doom.js"></script>
+<script src="doomgeneric.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Nostalgic Startpage",
+  "version": "2.5.0",
+  "description": "Replaces the new tab page with a fully functional Windows XP-style desktop: shortcuts, folders, themes, built-in apps and games.",
+  "minimum_chrome_version": "102",
+  "icons": {
+    "16": "icons/16/desktop.png",
+    "32": "icons/32/desktop.png",
+    "48": "icons/48/desktop.png",
+    "128": "icons/64/desktop.png"
+  },
+  "permissions": [
+    "tabs",
+    "bookmarks",
+    "favicon",
+    "storage",
+    "windows",
+    "history",
+    "downloads",
+    "topSites",
+    "declarativeNetRequest"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Nostalgic Startpage",
+    "default_icon": {
+      "16": "icons/16/desktop.png",
+      "32": "icons/32/desktop.png",
+      "48": "icons/48/desktop.png"
+    }
+  },
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
+}
