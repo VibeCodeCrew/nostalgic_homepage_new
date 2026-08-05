@@ -9,8 +9,12 @@ export interface EventMap {
     'theme-changed': { theme: ThemeId };
     'selection-changed': undefined;
     'wm-changed': undefined;           // список окон изменился (открытие/закрытие/минимизация)
+    'wm-opened': { id: string; title: string };
+    'wm-closed': { id: string };
+    'wm-dup-open': { id: string };     // повторное открытие уже запущенного приложения
     'storage-quota': { key: string };  // не удалось записать в localStorage (переполнение)
     'user-changed': undefined;         // имя/аватар пользователя изменились
+    'desktop-rendered': undefined;     // рабочий стол перерисован (renderDesktop)
 }
 
 type Handler<T> = (payload: T) => void;

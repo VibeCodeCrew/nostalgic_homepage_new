@@ -18,6 +18,7 @@ export interface LinkItem {
     name: string;
     url?: string;
     icon?: string;          // dataURL пользовательской иконки
+    customIcon?: string;    // пользовательская иконка (поле оригинала; приоритет над favicon)
     screenshot?: string;    // dataURL превью (НЕ сериализуется в localStorage — живёт в chrome.storage.local)
     app?: boolean;          // открывать в окне веб-приложения (IE6), а не во вкладке
     isFolder?: boolean;

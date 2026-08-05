@@ -1,0 +1,43 @@
+/* Контекстное меню XP.
+   Вербатим-вырезка из оригинального style.css (паритет 1:1). */
+
+/* ---- style.css:671-699 — CONTEXT MENU ---- */
+/* ===================== CONTEXT MENU ===================== */
+.xp-context-menu {
+    position: fixed; background: white;
+    border: 1px solid #ACA899;
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.3);
+    min-width: 200px; z-index: 9500;
+    padding: 2px 0; font-size: 12px;
+}
+.xp-ctx-item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 20px 4px 6px; color: #1a1a1a;
+    cursor: pointer; white-space: nowrap; position: relative;
+}
+.xp-ctx-item:hover { background: #316ac5; color: white; }
+.xp-ctx-item.ctx-danger { color: #c00000; }
+.xp-ctx-item.ctx-danger:hover { background: #c00000; color: white; }
+.xp-ctx-item.ctx-disabled { color: #999; cursor: default; pointer-events: none; }
+.xp-ctx-item.ctx-check::before { content: '\2713'; position: absolute; left: 6px; font-size: 10px; }
+.ctx-icon { width: 18px; text-align: center; font-size: 13px; flex-shrink: 0; }
+.xp-ctx-separator { height: 1px; background: #c8c4bc; margin: 2px 0; }
+.xp-ctx-has-submenu .ctx-arrow { position: absolute; right: 6px; font-size: 9px; color: #666; }
+.xp-ctx-has-submenu:hover .ctx-arrow { color: white; }
+.xp-submenu {
+    position: absolute; background: white;
+    border: 1px solid #ACA899;
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.3);
+    min-width: 160px; padding: 2px 0; z-index: 9600; top: 0;
+}
+
+/* ---- style.css:1091-1099 — анимация появления меню ---- */
+/* Context menu: quick fade+scale */
+@keyframes ctx-appear {
+    from { opacity: 0; transform: scale(0.94) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+#context-menu:not(.hidden) {
+    animation: ctx-appear 0.1s ease-out;
+    transform-origin: top left;
+}
