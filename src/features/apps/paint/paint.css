@@ -1,0 +1,13 @@
+/* ==================== PAINT ==================== */
+.paint-window { display:flex; flex-direction:column; height:100%; background:#c0c0c0; }
+.paint-toolbar { display:flex; align-items:center; gap:6px; padding:4px 6px; background:#d4d0c8; border-bottom:2px solid #808080; flex-wrap:wrap; flex-shrink:0; }
+.paint-tools { display:flex; gap:2px; }
+.paint-tool { width:26px; height:26px; border:2px solid #808080; background:#d4d0c8; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; border-radius:2px; padding:0; }
+.paint-tool.active { border:2px inset #808080; background:#b0b0b0; box-shadow:inset 1px 1px 2px rgba(0,0,0,0.3); }
+.paint-tool:hover { background:#c0c0c0; }
+.paint-colors { display:flex; flex-wrap:wrap; gap:2px; max-width:120px; }
+.paint-swatch { width:14px; height:14px; border:1px solid #666; cursor:pointer; box-sizing:border-box; }
+.paint-swatch.active { border:2px solid #000; }
+.paint-swatch:hover { transform:scale(1.2); }
+.paint-canvas-wrap { flex:1; overflow:auto; padding:4px; display:flex; align-items:flex-start; background:#808080; }
+#paint-canvas { background:#fff; cursor:crosshair; display:block; box-shadow:2px 2px 8px rgba(0,0,0,0.5); }

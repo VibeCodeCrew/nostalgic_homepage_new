@@ -1,0 +1,19 @@
+/* ==================== SOLITAIRE ==================== */
+/* Verbatim-порт блока style.css:1348-1366 */
+.solitaire-window { display:flex; flex-direction:column; height:100%; background:#006b00; }
+.sol-toolbar { display:flex; align-items:center; padding:4px 8px; background:#2c5f2c; flex-shrink:0; }
+.sol-area { flex:1; overflow:auto; padding:8px; display:flex; flex-direction:column; gap:8px; }
+.sol-top-row { display:flex; gap:8px; align-items:flex-start; }
+.sol-tab-row { display:flex; gap:8px; align-items:flex-start; flex:1; }
+.sol-card-place { width:68px; height:96px; border:2px dashed rgba(255,255,255,0.3); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:24px; color:rgba(255,255,255,0.5); flex-shrink:0; }
+.sol-card { width:68px; min-height:96px; background:#fff; border:1px solid #bbb; border-radius:5px; cursor:pointer; font-size:13px; font-weight:bold; box-shadow:1px 2px 4px rgba(0,0,0,0.3); display:flex; flex-direction:column; justify-content:space-between; padding:3px; box-sizing:border-box; position:relative; user-select:none; }
+.sol-card.sol-back { background:repeating-linear-gradient(45deg,#1a3a8a,#1a3a8a 5px,#2a5aaa 5px,#2a5aaa 10px); }
+.sol-card.sol-red { color:#cc0000; }
+.sol-card.sol-black { color:#000; }
+.sol-val-top { font-size:12px; line-height:1; }
+.sol-val-bot { font-size:12px; line-height:1; align-self:flex-end; transform:rotate(180deg); }
+.sol-col { display:flex; flex-direction:column; min-width:68px; min-height:96px; }
+.sol-empty-col { border:2px dashed rgba(255,255,255,0.2); border-radius:6px; width:68px; height:96px; }
+.sol-foundation { background:rgba(0,80,0,0.4); font-size:20px; }
+.sol-stock { background:rgba(0,0,80,0.3); font-size:28px; cursor:pointer; }
+.sol-waste { background:transparent; border:none; }

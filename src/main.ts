@@ -4,6 +4,7 @@
 
 import './styles/base.css';
 import './styles/dialogs.css';
+import './styles/apps.css';
 
 import { on } from './core/events';
 import { notifyStorageQuota } from './core/notifications';
@@ -13,11 +14,20 @@ import { initDesktop, renderDesktop } from './features/desktop';
 import { initTaskbar } from './features/taskbar';
 import { initTray } from './features/tray';
 import { initStartMenu, updateStartMenuUser } from './features/startmenu';
+import { initShortcuts } from './features/shortcuts';
+import { initExplorer } from './features/explorer';
+import { initSettings } from './features/settings';
+import { initStickyNotes } from './features/stickynotes';
+import { initShutdown } from './features/shutdown';
+import { initImportExport } from './features/shortcuts/importExport';
+import { initApps } from './features/apps';
+import { initWebApps, initWebAppFrameRules } from './features/webapps';
 
 function runStandardInit(): void {
     // Тема (xp/macos) + фон + меню-бар/док
     initThemes();
-    // DNR-правила веб-приложений — Этап 4 (initWebAppFrameRules)
+    // DNR-правило 9001 для веб-приложений (снятие X-Frame-Options у нашей вкладки)
+    initWebAppFrameRules();
 
     // Имя/аватар в меню «Пуск»
     updateStartMenuUser();
@@ -25,7 +35,6 @@ function runStandardInit(): void {
     // Скриншоты из chrome.storage.local → in-memory, затем рендер
     initScreenshots(() => {
         renderDesktop();
-        // renderStickies — Этап 3
     });
 
     // Оболочка: рабочий стол, панель задач, трей, меню «Пуск»
@@ -33,9 +42,16 @@ function runStandardInit(): void {
     initTaskbar();
     initTray();       // часы запускаются здесь (updateClock каждую секунду)
     initStartMenu();
+    initShortcuts();  // диалоги ярлыков, скриншоты, дропы
+    initExplorer();   // Мой компьютер, корзина, сведения, закладки
+    initSettings();
+    initStickyNotes();
+    initShutdown();
+    initImportExport();
+    initApps();
+    initWebApps();
 
-    // Этап 3: stickynotes; Этап 5: clippy, screensaver, updater (тихая проверка
-    // через 5 с после старта и далее каждые 2 часа)
+    // Этап 5: clippy, screensaver, bsod, oobe, updater (тихая проверка через 5 с и каждые 2 ч)
 }
 
 function boot(): void {

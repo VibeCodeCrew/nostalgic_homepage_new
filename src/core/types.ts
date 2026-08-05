@@ -59,14 +59,13 @@ export interface Settings {
 
 /** Стикер (Post-it). */
 export interface StickyNote {
-    id: number;
+    id: string;           // 'sticky_<timestamp>'
     text: string;
     x: number;
     y: number;
     w: number;
     h: number;
-    color: string;
-    z?: number;
+    colorIdx: number;     // индекс в палитре STICKY_COLORS
 }
 
 /** Геометрия окна, персистится в xp_window_geom. */

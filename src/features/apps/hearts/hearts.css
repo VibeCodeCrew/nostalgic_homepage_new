@@ -1,0 +1,10 @@
+/* ==================== HEARTS ==================== */
+.hearts-window { display:flex; flex-direction:column; height:100%; background:#1a4a1a; }
+.hearts-table { flex:1; display:grid; grid-template-areas:"top top top" "left center right" "bottom bottom bottom"; gap:4px; padding:8px; }
+.hearts-hand { display:flex; flex-wrap:wrap; gap:4px; padding:6px 8px; background:#0d2e0d; min-height:70px; }
+.hearts-card { background:#fff; border:1px solid #bbb; border-radius:4px; padding:4px 8px; font-size:14px; font-weight:bold; cursor:pointer; box-shadow:1px 2px 3px rgba(0,0,0,0.3); user-select:none; min-width:40px; text-align:center; }
+.hearts-card:hover { transform:translateY(-4px); }
+.hearts-red { color:#cc0000; }
+.hearts-black { color:#000; }
+.hearts-trick-card { display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold; }
+.hearts-bot-count { color:rgba(255,255,255,0.7); font-size:11px; display:flex; align-items:center; justify-content:center; }

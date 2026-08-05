@@ -65,6 +65,9 @@ export function setUserAvatar(avatar: string | null): void {
 
 // ==================== ВЫДЕЛЕНИЕ ИКОНОК ====================
 
+/** Время загрузки страницы (аптайм в «Сведениях о системе»). */
+export const pageLoadTime = Date.now();
+
 export const selectedIndices = new Set<number>(); // выделенные ярлыки
 export const selectedSysIds = new Set<string>();  // выделенные системные иконки (компьютер, корзина, DOOM)
 export const minimizedTiles = new Set<number>();  // indices плиток, свёрнутых в панель задач

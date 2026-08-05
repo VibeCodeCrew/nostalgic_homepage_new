@@ -1,0 +1,33 @@
+/* Стикеры (Post-it) — порт style.css:1553-1584 */
+/* ===================== STICKY NOTES ===================== */
+.xp-sticky {
+    position:absolute; z-index:8500; min-width:140px; min-height:100px;
+    display:flex; flex-direction:column; box-shadow:3px 3px 10px rgba(0,0,0,0.3);
+    border:1px solid rgba(0,0,0,0.2);
+}
+.xp-sticky-titlebar {
+    height:20px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 4px; cursor:move; flex-shrink:0; font-size:11px; font-weight:bold;
+    font-family:Tahoma,sans-serif; color:#333;
+}
+.xp-sticky-close {
+    cursor:pointer; font-size:12px; line-height:1; padding:1px 3px;
+    border-radius:2px; user-select:none; color:#555;
+}
+.xp-sticky-close:hover { background:rgba(0,0,0,0.15); color:#000; }
+.xp-sticky-colors { display:flex; gap:3px; }
+.xp-sticky-color-btn {
+    width:12px; height:12px; border-radius:50%; cursor:pointer;
+    border:1px solid rgba(0,0,0,0.3); flex-shrink:0;
+}
+.xp-sticky-body {
+    flex:1; padding:6px; outline:none; border:none; resize:none;
+    font-family:Tahoma,sans-serif; font-size:12px; background:transparent;
+    line-height:1.4; overflow:auto; min-height:80px;
+}
+.xp-sticky-resize {
+    width:12px; height:12px; position:absolute; bottom:0; right:0;
+    cursor:se-resize; background:rgba(0,0,0,0.15);
+    clip-path:polygon(100% 0,100% 100%,0 100%);
+}
+

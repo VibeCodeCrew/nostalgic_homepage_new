@@ -3,6 +3,8 @@
 // Вся логика (окна, ярлыки, приложения) от темы не зависит.
 
 import './themes.css';
+import { STORAGE, KEY_CUSTOM_BG_DATA, MARKER_CUSTOM } from '../../core/keys';
+import { migrateBlobToChromeStorage } from '../../core/screenshots';
 import { settings, updateSetting } from '../../core/state';
 import { on, emit } from '../../core/events';
 import { xpIconHtml } from '../../core/dom';
@@ -70,6 +72,9 @@ export function setTheme(theme: ThemeId): void {
 
 export function initThemes(): void {
     setTaskbarIconTransform(transformTaskbarIcon);
+    // ФИКС АУДИТА #3: старые dataURL-фоны из localStorage переезжают в chrome.storage.local
+    // (edge_custom_bg заменяется маркером 'custom', applyBackground резолвит его асинхронно)
+    migrateBlobToChromeStorage(STORAGE.bg, KEY_CUSTOM_BG_DATA, MARKER_CUSTOM);
     on('settings-changed', ({ key }) => {
         if (key !== 'theme') return;
         applyTheme();
