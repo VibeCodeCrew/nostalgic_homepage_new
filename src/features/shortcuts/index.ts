@@ -4,6 +4,7 @@
 
 import { el, xpIconHtml } from '../../core/dom';
 import { debounce } from '../../core/debounce';
+import { emit } from '../../core/events';
 import { links, saveLinks } from '../../core/state';
 import { registerAction, ACTION } from '../../core/actions';
 import { showNotification } from '../../core/notifications';
@@ -135,6 +136,7 @@ export function requestScreenshot(url: string, targetItem: LinkItem): void {
             targetItem.screenshot = response.dataUrl;
             saveScreenshot(url, response.dataUrl);
             saveAndRender();
+            emit('screenshot-taken'); // реакция Clippy — подписка в features/clippy
         }
     });
 }

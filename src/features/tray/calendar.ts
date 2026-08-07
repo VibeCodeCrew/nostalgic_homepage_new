@@ -1,9 +1,12 @@
 // Всплывающий календарь по клику на часы трея (и на часы меню-бара macos) —
 // порт CALENDAR (script.js:3446-3504). Реакции Клиппи не портируются (не наша зона).
 
+import { emit } from '../../core/events';
+
 export function toggleCalendar(): void {
     const existing = document.getElementById('xp-calendar');
     if (existing) { existing.remove(); return; }
+    emit('calendar-opened');
     const now = new Date();
     let calYear = now.getFullYear();
     let calMonth = now.getMonth();

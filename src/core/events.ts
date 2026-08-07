@@ -15,6 +15,16 @@ export interface EventMap {
     'storage-quota': { key: string };  // не удалось записать в localStorage (переполнение)
     'user-changed': undefined;         // имя/аватар пользователя изменились
     'desktop-rendered': undefined;     // рабочий стол перерисован (renderDesktop)
+    // --- Триггеры реакций Скрепки (эмиттеры добавляет координатор; подписчик — features/clippy) ---
+    'calendar-opened': undefined;      // открыт календарь (клик по часам)
+    'volume-changed': undefined;       // громкость изменена (слайдер отпущен)
+    'data-exported': undefined;        // данные экспортированы в JSON
+    'wallpaper-changed': undefined;    // установлен пользовательский фон рабочего стола
+    'startmenu-opened': undefined;     // открыто меню Пуск
+    'screenshot-taken': undefined;     // скриншот ярлыка успешно обновлён
+    'first-run-completed': undefined;  // завершён первый запуск (setup-мастер)
+    'bsod-ended': undefined;           // BSOD закрыт, началась загрузка XP
+    'update-available': undefined;     // найдена новая версия (Windows Update)
 }
 
 type Handler<T> = (payload: T) => void;

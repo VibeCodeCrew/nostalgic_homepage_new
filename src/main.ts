@@ -1,6 +1,5 @@
 // Nostalgic Startpage — точка входа страницы новой вкладки.
-// Boot: инициализация core → темы → данные → рабочий стол → оболочка.
-// OOBE-мастер, Clippy, скринсейвер, updater — Этап 5 ребилда.
+// Boot: OOBE при первом запуске → стандартная инициализация.
 
 import './styles/base.css';
 import './styles/dialogs.css';
@@ -22,13 +21,21 @@ import { initShutdown } from './features/shutdown';
 import { initImportExport } from './features/shortcuts/importExport';
 import { initApps } from './features/apps';
 import { initWebApps, initWebAppFrameRules } from './features/webapps';
+import { initScreensaver } from './features/screensaver';
+import { initBsod } from './features/bsod';
+import { initHotkeys } from './features/bsod/hotkeys';
+import { initUpdater } from './features/updater';
+import { initClippy } from './features/clippy';
+import { initSetupOOBE, isSetupDone, initOOBEGrids } from './features/oobe';
 
 function runStandardInit(): void {
-    // Тема (xp/macos) + фон + меню-бар/док
+    // Тема (xp/macos) + фон + меню-бар/док (+ миграция dataURL-фона в chrome.storage)
     initThemes();
     // DNR-правило 9001 для веб-приложений (снятие X-Frame-Options у нашей вкладки)
     initWebAppFrameRules();
 
+    // Сетки аватаров (OOBE и диалог выбора) генерируются из одного массива
+    initOOBEGrids();
     // Имя/аватар в меню «Пуск»
     updateStartMenuUser();
 
@@ -51,16 +58,23 @@ function runStandardInit(): void {
     initApps();
     initWebApps();
 
-    // Этап 5: clippy, screensaver, bsod, oobe, updater (тихая проверка через 5 с и каждые 2 ч)
+    // Фон и метагейм
+    initScreensaver();
+    initBsod();       // действие 'bsod' + пасхалка (5 кликов по часам)
+    initHotkeys();    // Ctrl+Alt+R, Ctrl+Shift+Esc, Ctrl+V, Delete, Escape
+    initClippy();
+    initUpdater();    // тихая проверка через 5 с после старта и далее каждые 2 часа
 }
 
 function boot(): void {
     // Уведомление о переполнении localStorage
     on('storage-quota', ({ key }) => notifyStorageQuota(key));
 
-    // Этап 5: если первый запуск (!xp_setup_done) — initSetupOOBE(runStandardInit),
-    // иначе сразу runStandardInit(). Пока OOBE не портирован — стандартный путь.
-    runStandardInit();
+    if (!isSetupDone()) {
+        initSetupOOBE(runStandardInit);
+    } else {
+        runStandardInit();
+    }
 }
 
 if (document.readyState === 'loading') {

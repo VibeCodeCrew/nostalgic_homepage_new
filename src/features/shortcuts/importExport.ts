@@ -5,6 +5,7 @@
 import { STORAGE, KEY_CUSTOM_BG_DATA, MARKER_CUSTOM } from '../../core/keys';
 import { getStrOrNull, setItem } from '../../core/store';
 import { registerAction, ACTION } from '../../core/actions';
+import { emit } from '../../core/events';
 import { isSafeUrl } from '../../core/url';
 import { applyBackground } from '../themes';
 import type { LinkItem } from '../../core/types';
@@ -24,6 +25,7 @@ export function exportData(): void {
     const a = document.createElement('a');
     a.href = url; a.download = 'edge_startpage_backup.json'; a.click();
     URL.revokeObjectURL(url);
+    emit('data-exported'); // реакция Clippy — подписка в features/clippy
 }
 
 /**
@@ -89,21 +91,25 @@ function bindBgUpload(): void {
             const dataUrl = String(ev.target!.result || '');
             if (!dataUrl) return;
             // ФИКС АУДИТА #3: большой dataURL — в chrome.storage.local, в localStorage только маркер
+            const done = (): void => { emit('wallpaper-changed'); }; // реакция Clippy — подписка в features/clippy
             if (typeof chrome !== 'undefined' && chrome.storage) {
                 chrome.storage.local.set({ [KEY_CUSTOM_BG_DATA]: dataUrl }, () => {
                     if (chrome.runtime.lastError) {
                         // Откат: храним по-старому в localStorage, чтобы не потерять фон
                         setItem(STORAGE.bg, dataUrl);
                         applyBackground();
+                        done();
                         return;
                     }
                     setItem(STORAGE.bg, MARKER_CUSTOM);
                     applyBackground();
+                    done();
                 });
             } else {
                 // Fallback для dev-страницы вне расширения
                 setItem(STORAGE.bg, dataUrl);
                 applyBackground();
+                done();
             }
         };
         r.readAsDataURL(file);

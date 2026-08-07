@@ -11,10 +11,11 @@ import { getPosKey } from '../../core/grid';
 import { emit } from '../../core/events';
 import {
     links, minimizedTiles, saveLinks, saveTrash, selectedIndices,
-    setTrashedLinks, settings, trashedLinks,
+    setTrashedLinks, settings, trashedLinks, clearSelection,
 } from '../../core/state';
 import { deleteScreenshot } from '../../core/screenshots';
 import { isSafeUrl } from '../../core/url';
+import { registerAction, ACTION } from '../../core/actions';
 import type { LinkItem } from '../../core/types';
 import { wmClose, wmCreate } from '../../wm/windowManager';
 import { refreshDockTrash } from '../themes';
@@ -210,6 +211,45 @@ function placeIcon(icon: HTMLElement, item: LinkItem): void {
     icon.style.top = pos.y + 'px';
 }
 
+// ==================== УДАЛЕНИЕ ВЫДЕЛЕННЫХ (клавиша Delete) ====================
+
+function showDeleteConfirm(msg: string, onConfirm: () => void): void {
+    const winId = 'delete-confirm';
+    wmClose(winId);
+    const c = el('div', { style: 'padding:18px;display:flex;flex-direction:column;gap:14px;background:white;' });
+    const msgEl = el('div', { style: 'font-size:12px;color:#333;', text: msg });
+    const bd = el('div', { style: 'display:flex;gap:8px;justify-content:flex-end;' });
+    const ok = el('button', { className: 'xp-dialog-btn xp-dialog-btn-primary', text: 'Да' });
+    const cn = el('button', { className: 'xp-dialog-btn', text: 'Нет' });
+    bd.appendChild(ok); bd.appendChild(cn);
+    c.appendChild(msgEl); c.appendChild(bd);
+    wmCreate(winId, 'Подтверждение удаления', c, 320, 130, xpIconHtml('delete', 16));
+    ok.addEventListener('click', () => { wmClose(winId); onConfirm(); });
+    cn.addEventListener('click', () => { wmClose(winId); });
+}
+
+export function deleteSelectedIcons(): void {
+    if (!selectedIndices.size) return;
+    const indices = Array.from(selectedIndices);
+    const folderCount = indices.filter(i => links[i] && links[i].isFolder).length;
+    const linkCount = indices.length - folderCount;
+    function doDelete(): void {
+        indices.sort((a, b) => b - a).forEach(i => { trashLink(i); });
+        clearSelection();
+        renderDesktop();
+    }
+    if (folderCount > 0) {
+        let msg = 'Удалить в корзину: ';
+        if (folderCount) msg += folderCount + ' папк' + (folderCount === 1 ? 'у' : 'и');
+        if (folderCount && linkCount) msg += ' и ';
+        if (linkCount) msg += linkCount + ' ярлык' + (linkCount === 1 ? '' : 'а');
+        msg += '?';
+        showDeleteConfirm(msg, doDelete);
+    } else {
+        doDelete();
+    }
+}
+
 // ==================== BOOKMARK DRAG & DROP ====================
 // Внешние дропы (закладки/ссылки из браузера) на рабочий стол и в окна папок.
 // Реальные обработчики — features/shortcuts (Этап 3) через setDropHandlers.
@@ -278,6 +318,7 @@ export function initDesktop(): void {
     initSelection();
     initDesktopDrag();
     initContextMenuRouter();
+    registerAction(ACTION.deleteSelected, deleteSelectedIcons);
 
     // Перерисовка НЕ подписана на 'links-changed' автоматически: многие операции
     // (drag-позиции) пишут saveLinks() без перерисовки — как в оригинале.

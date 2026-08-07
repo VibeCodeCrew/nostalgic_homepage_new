@@ -44,4 +44,5 @@ export const ACTION = {
     openDoom: 'app:doom',
     openPinball: 'app:pinball',
     startScreensaver: 'screensaver',
+    deleteSelected: 'delete-selected', // Delete на рабочем столе → подтверждение удаления выделенных
 } as const;

@@ -2,6 +2,7 @@
 // Громкость хранится/применяется через core/sound (edge_volume + master gain).
 
 import { xpIconHtml } from '../../core/dom';
+import { emit } from '../../core/events';
 import { getVolume, setVolume } from '../../core/sound';
 
 export function toggleVolumePopup(): void {
@@ -40,6 +41,7 @@ export function toggleVolumePopup(): void {
         valLbl.textContent = Math.round(v * 100) + '%';
         updateVolIcon(v);
     });
+    slider.addEventListener('change', () => { emit('volume-changed'); });
     setTimeout(() => {
         document.addEventListener('click', function dismiss(ev) {
             if (!popup.contains(ev.target as Node) && ev.target !== tvEl) {

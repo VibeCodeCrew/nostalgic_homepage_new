@@ -5,7 +5,7 @@ import './startmenu.css';
 import { runAction, ACTION } from '../../core/actions';
 import { registerAction } from '../../core/actions';
 import { username, userAvatar } from '../../core/state';
-import { on } from '../../core/events';
+import { on, emit } from '../../core/events';
 import { openAllPrograms } from './allPrograms';
 import { openAvatarPicker } from './avatarPicker';
 import { resolveAvatarSrc } from './avatarPicker';
@@ -33,6 +33,7 @@ export function toggleStartMenu(): void {
         menu.classList.remove('hidden');
         sb.classList.add('active');
         sb.setAttribute('aria-expanded', 'true');
+        emit('startmenu-opened'); // реакция Clippy — подписка в features/clippy
     } else {
         closeStartMenu();
     }
