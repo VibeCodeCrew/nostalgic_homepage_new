@@ -108,9 +108,8 @@ function openSettings(): void {
     }
     buildModeControls();
     vs.addEventListener('change', () => {
-        updateSetting('viewMode', vs.value as ViewMode);
+        updateSetting('viewMode', vs.value as ViewMode); // перерисовка — подписка в desktop
         buildModeControls();
-        renderDesktop();
     });
 
     // --- Tab: Рабочий стол ---

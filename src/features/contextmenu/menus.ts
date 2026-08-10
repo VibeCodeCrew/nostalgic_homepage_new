@@ -19,9 +19,9 @@ const SEP: ContextMenuItem = { separator: true };
 export function showDesktopContextMenu(x: number, y: number): void {
     showContextMenu(x, y, [
         { label: 'Вид', icon: xpIconHtml('desktop', 16), submenu: [
-            { label: 'Плитки (стекло)', checked: settings.viewMode === 'glass',  action: () => { updateSetting('viewMode', 'glass');  renderDesktop(); } },
-            { label: 'Окна с превью',  checked: settings.viewMode === 'window', action: () => { updateSetting('viewMode', 'window'); renderDesktop(); } },
-            { label: 'Ярлыки XP',      checked: settings.viewMode === 'icon',   action: () => { updateSetting('viewMode', 'icon');   renderDesktop(); } },
+            { label: 'Плитки (стекло)', checked: settings.viewMode === 'glass',  action: () => { updateSetting('viewMode', 'glass'); } },
+            { label: 'Окна с превью',  checked: settings.viewMode === 'window', action: () => { updateSetting('viewMode', 'window'); } },
+            { label: 'Ярлыки XP',      checked: settings.viewMode === 'icon',   action: () => { updateSetting('viewMode', 'icon'); } },
         ] },
         { label: 'Создать', icon: xpIconHtml('new-folder', 16), submenu: [
             { label: 'Ярлык', icon: xpIconHtml('internet-shortcut', 16), action: () => { runAction(ACTION.addShortcut, { folderIndex: null }); } },

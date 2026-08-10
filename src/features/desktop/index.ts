@@ -8,7 +8,7 @@ import { setJSON } from '../../core/store';
 import { el, escapeHtml, xpIconHtml, getFaviconUrl } from '../../core/dom';
 import { debounce } from '../../core/debounce';
 import { getPosKey } from '../../core/grid';
-import { emit } from '../../core/events';
+import { emit, on } from '../../core/events';
 import {
     links, minimizedTiles, saveLinks, saveTrash, selectedIndices,
     setTrashedLinks, settings, trashedLinks, clearSelection,
@@ -319,6 +319,12 @@ export function initDesktop(): void {
     initDesktopDrag();
     initContextMenuRouter();
     registerAction(ACTION.deleteSelected, deleteSelectedIcons);
+
+    // Смена режима вида (меню, настройки, mac-менюбар) → перерисовка.
+    // Единая точка реакции — явные вызовы renderDesktop при смене viewMode не нужны.
+    on('settings-changed', ({ key }) => {
+        if (key === 'viewMode') renderDesktop();
+    });
 
     // Перерисовка НЕ подписана на 'links-changed' автоматически: многие операции
     // (drag-позиции) пишут saveLinks() без перерисовки — как в оригинале.
