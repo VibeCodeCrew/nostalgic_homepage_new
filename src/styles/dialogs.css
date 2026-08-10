@@ -83,6 +83,8 @@
     background:#ECE9D8; border-color:#aca899; z-index:1;
     font-weight:bold; color:#000;
 }
-.settings-tab-content { display:none; }
+/* :not(.active) поднимает специфичность над .settings-form { display:flex } из apps.css —
+   иначе при порядке импорта dialogs.css < apps.css все панели табов видны сразу */
+.settings-tab-content:not(.active) { display: none; }
 .settings-tab-content.active { display:block; }
 
