@@ -625,6 +625,14 @@ function clippySubscribeEvents(): void {
     on('storage-quota', () => {
         setTimeout(() => { clippySay(CLIPPY_MSGS.tip_general, 'alert', 5000); }, 300);
     });
+
+    // Универсальный канал: любая фича может попросить реакцию по категории фраз
+    // (emit('clippy-react', { category: 'react_...', anim, duration, delay })).
+    on('clippy-react', ({ category, anim, duration, delay }) => {
+        const msgs = CLIPPY_MSGS[category];
+        if (!msgs) { console.warn('[XP] clippy-react: нет категории ' + category); return; }
+        setTimeout(() => { clippySay(msgs, anim as ClippyAnim | undefined, duration); }, delay ?? 300);
+    });
 }
 
 // ==================== ТОЧКА ВХОДА ====================

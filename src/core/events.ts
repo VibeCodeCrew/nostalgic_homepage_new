@@ -15,6 +15,9 @@ export interface EventMap {
     'storage-quota': { key: string };  // не удалось записать в localStorage (переполнение)
     'user-changed': undefined;         // имя/аватар пользователя изменились
     'desktop-rendered': undefined;     // рабочий стол перерисован (renderDesktop)
+    /** Универсальный канал реакций Clippy: фича просит Скрепку сказать категорию фраз.
+     *  category — ключ CLIPPY_MSGS (react_*), anim — имя анимации, duration/delay — мс. */
+    'clippy-react': { category: string; anim?: string; duration?: number; delay?: number };
     // --- Триггеры реакций Скрепки (эмиттеры добавляет координатор; подписчик — features/clippy) ---
     'calendar-opened': undefined;      // открыт календарь (клик по часам)
     'volume-changed': undefined;       // громкость изменена (слайдер отпущен)

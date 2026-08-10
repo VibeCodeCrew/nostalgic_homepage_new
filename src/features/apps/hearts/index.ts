@@ -3,6 +3,7 @@
 
 import './hearts.css';
 import { registerAction } from '../../../core/actions';
+import { emit } from '../../../core/events';
 import { xpIconHtml } from '../../../core/dom';
 import { wmCreate, wmGet, wmRestore, wmFocus, wmResizeToContent } from '../../../wm/windowManager';
 
@@ -110,6 +111,10 @@ function startHearts(later: LaterFn): void {
         if (isHeart(card) || isQS(card)) heartsBroken = true;
         hands[0] = hand.filter(c => c !== card);
         trickCards.push({ player: 0, card: card });
+        // E?: реакция на первый ход игрока в Червах
+        if (trick === 0 && trickCards.length === 1) {
+            emit('clippy-react', { category: 'react_hearts_first_move', anim: 'wave', duration: 4000, delay: 400 });
+        }
         trickLead = (trickLead + 1) % 4;
         renderHearts();
         later(() => {
@@ -142,10 +147,21 @@ function startHearts(later: LaterFn): void {
             if (shootIdx >= 0) {
                 scores = scores.map((s, i) => i === shootIdx ? 0 : s + 26);
                 setStatus(names[shootIdx] + ' взял все штрафы! +26 всем остальным.');
+                // E9: shooting the moon — радость, если игрок; уважение, если бот
+                emit('clippy-react', { category: 'react_hearts_moon', anim: shootIdx === 0 ? 'excited' : 'wave', delay: 600 });
             }
             renderHearts();
             later(() => {
                 const msg = names.map((n, i) => n + ': ' + scores[i]).join('\n');
+                // E9: победа/поражение в Червах
+                const playerScore = scores[0];
+                const maxScore = Math.max.apply(null, scores);
+                const minScore = Math.min.apply(null, scores);
+                if (playerScore === minScore) {
+                    emit('clippy-react', { category: 'react_hearts_win', anim: 'excited', delay: 100 });
+                } else if (playerScore === maxScore) {
+                    emit('clippy-react', { category: 'react_hearts_loss', anim: 'sad', delay: 100 });
+                }
                 if (confirm('Раунд окончен!\n' + msg + '\nСыграть ещё?')) newGame();
             }, 500);
             return;

@@ -2,9 +2,10 @@
 // Порт MINESWEEPER (script.js:4550-4855).
 // Фикс аудита: интервал таймера в оригинале НЕ очищался при закрытии окна —
 // здесь очистка через wmGet('minesweeper').onClose.
-// Клик-реакции Clippy из оригинала не портируются.
+// Реакции Clippy (первый клик, флаг, победа/поражение) — через emit('clippy-react').
 
 import { xpIconHtml } from '../../../core/dom';
+import { emit } from '../../../core/events';
 import { minesweeperLosses, setMinesweeperLosses } from '../../../core/state';
 import { registerAction, runAction } from '../../../core/actions';
 import { wmCreate, wmGet, wmRestore, wmFocus } from '../../../wm/windowManager';
@@ -269,6 +270,8 @@ export function openMinesweeper(): void {
                 first = false;
                 place(r, cc, R, C, M);
                 tint = setInterval(() => { secs++; setTimer(secs); }, 1000);
+                // E1: первый клик по полю
+                emit('clippy-react', { category: 'react_mines_firstclick', anim: 'think', duration: 4000, delay: 300 });
             }
             if (board[r][cc] === -1) {
                 over = true;
@@ -280,6 +283,12 @@ export function openMinesweeper(): void {
                 const sm = c.querySelector('#mines-smiley');
                 if (sm) sm.textContent = '\uD83D\uDE35';
                 setMinesweeperLosses(minesweeperLosses + 1);
+                // E3: два поражения подряд — отдельная реплика
+                if (minesweeperLosses === 2) {
+                    emit('clippy-react', { category: 'react_mines_second_loss', anim: 'sad', delay: 500 });
+                } else {
+                    emit('clippy-react', { category: 'react_minesweeper_loss', anim: 'sad', delay: 500 });
+                }
                 // Третье поражение подряд — BSOD (действие регистрирует фича BSOD)
                 if (minesweeperLosses >= 3) { setTimeout(() => { runAction('bsod'); }, 1500); }
                 return;
@@ -294,6 +303,7 @@ export function openMinesweeper(): void {
                 const sm = c.querySelector('#mines-smiley');
                 if (sm) { sm.textContent = '\uD83D\uDE0E'; sm.classList.remove('mines-smiley-bounce'); void (sm as HTMLElement).offsetWidth; sm.classList.add('mines-smiley-bounce'); }
                 animateWin();
+                emit('clippy-react', { category: 'react_minesweeper_win', anim: 'excited', delay: 500 });
             }
         });
 
@@ -316,6 +326,10 @@ export function openMinesweeper(): void {
                 cell.textContent = '\uD83D\uDEA9';
                 cell.classList.add('mines-flag-anim');
                 setTimeout(() => { cell.classList.remove('mines-flag-anim'); }, 200);
+            }
+            // E2: реакция на установку флага (30% шанс, как в оригинале)
+            if (flag[r][cc] && Math.random() < 0.3) {
+                emit('clippy-react', { category: 'react_mines_flag', anim: 'wave', duration: 3500, delay: 200 });
             }
         });
 
@@ -348,6 +362,7 @@ export function openMinesweeper(): void {
                 const sm = c.querySelector('#mines-smiley');
                 if (sm) sm.textContent = '\uD83D\uDE35';
                 setMinesweeperLosses(minesweeperLosses + 1);
+                emit('clippy-react', { category: 'react_minesweeper_loss', anim: 'sad', delay: 500 });
                 if (minesweeperLosses >= 3) { setTimeout(() => { runAction('bsod'); }, 1500); }
             } else {
                 rend(R, C);
@@ -359,6 +374,7 @@ export function openMinesweeper(): void {
                     const sm = c.querySelector('#mines-smiley');
                     if (sm) { sm.textContent = '\uD83D\uDE0E'; sm.classList.remove('mines-smiley-bounce'); void (sm as HTMLElement).offsetWidth; sm.classList.add('mines-smiley-bounce'); }
                     animateWin();
+                    emit('clippy-react', { category: 'react_minesweeper_win', anim: 'excited', delay: 500 });
                 }
             }
         });

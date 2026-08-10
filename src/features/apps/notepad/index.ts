@@ -1,7 +1,8 @@
 // Блокнот — черновик с автосохранением (edge_notepad).
-// Порт NOTEPAD (script.js:4413-4441). Клик-реакции Clippy не портируются.
+// Порт NOTEPAD (script.js:4413-4441).
 
 import { el, xpIconHtml } from '../../../core/dom';
+import { emit } from '../../../core/events';
 import { STORAGE } from '../../../core/keys';
 import { getStr, setItem } from '../../../core/store';
 import { debounce } from '../../../core/debounce';
@@ -35,9 +36,15 @@ export function openNotepad(): void {
     const autosave = debounce(() => { setItem(STORAGE.notepad, ta.value); }, 300);
     ta.addEventListener('input', autosave);
 
+    let notepadLongShown = false;
     ta.addEventListener('keyup', () => {
         const b = ta.value.substr(0, ta.selectionStart).split('\n');
         sb.textContent = 'Строка: ' + b.length + ' | Столбец: ' + (b[b.length - 1].length + 1);
+        // Реакция Скрепки на 500+ символов (один раз за открытие окна)
+        if (!notepadLongShown && ta.value.length >= 500) {
+            notepadLongShown = true;
+            emit('clippy-react', { category: 'react_notepad_long', anim: 'talk', duration: 6000 });
+        }
     });
     fb.addEventListener('click', e => {
         e.stopPropagation();

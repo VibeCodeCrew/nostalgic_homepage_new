@@ -5,6 +5,7 @@
 import { getBool, getInt } from '../../core/store';
 import { throttle } from '../../core/debounce';
 import { registerAction, ACTION } from '../../core/actions';
+import { emit } from '../../core/events';
 
 // Ключи настроек — контракт оригинала (в keys.ts их нет, читаем напрямую через store).
 const KEY_SS_ENABLED = 'edge_ss_enabled';
@@ -142,9 +143,7 @@ export function stopScreensaver(): void {
         ssEl = null;
     }
     resetScreensaver();
-    // TODO(coordinator): в оригинале здесь через 1 с срабатывал
-    // clippySay(CLIPPY_MSGS.react_screensaver_off, 'wave') — подключить,
-    // когда будет портирован clippy (события в EventMap для этого нет).
+    emit('clippy-react', { category: 'react_screensaver_off', anim: 'wave', delay: 1000 });
 }
 
 // Троттлированный трекинг активности (фикс аудита, см. ACTIVITY_THROTTLE_MS).

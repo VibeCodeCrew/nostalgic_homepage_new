@@ -3,6 +3,7 @@
 // режим autoArrangeIcons. Порт секции DRAG оригинального script.js (~798-1089).
 
 import { getPosKey, snapPos } from '../../core/grid';
+import { emit } from '../../core/events';
 import { links, saveLinks, selectedIndices, selectedSysIds, settings } from '../../core/state';
 import { wmWindows } from '../../wm/windowManager';
 import type { LinkItem } from '../../core/types';
@@ -245,6 +246,9 @@ export function initDesktopDrag(): void {
                 intoFolder = true;
                 selectedIndices.clear();
                 deps.saveAndRender();
+                if (Math.random() < 0.4) {
+                    emit('clippy-react', { category: 'react_drop_folder', anim: 'wave', duration: 3000, delay: 300 });
+                }
             }
 
             // Проверка иконок папок
@@ -328,6 +332,9 @@ export function initDesktopDrag(): void {
                     refreshOpenFolderWindow(fIdx);
                     intoFolder = true;
                     deps.saveAndRender();
+                    if (Math.random() < 0.4) {
+                        emit('clippy-react', { category: 'react_drop_folder', anim: 'wave', duration: 3000, delay: 300 });
+                    }
                 }
             });
             if (!intoFolder) {
@@ -345,6 +352,9 @@ export function initDesktopDrag(): void {
                             refreshOpenFolderWindow(fIdx);
                             intoFolder = true;
                             deps.saveAndRender();
+                            if (Math.random() < 0.4) {
+                                emit('clippy-react', { category: 'react_drop_folder', anim: 'wave', duration: 3000, delay: 300 });
+                            }
                         }
                     }
                 });

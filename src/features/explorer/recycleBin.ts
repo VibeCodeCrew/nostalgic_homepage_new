@@ -1,6 +1,7 @@
 // Корзина — порт RECYCLE BIN (script.js:4330-4350).
 
 import { el, escapeHtml, xpIconHtml } from '../../core/dom';
+import { emit } from '../../core/events';
 import { links, saveTrash, setTrashedLinks, trashedLinks } from '../../core/state';
 import { wmCreate, wmWindows, wmRestore, wmFocus } from '../../wm/windowManager';
 import { saveAndRender } from '../desktop';
@@ -28,6 +29,7 @@ export function openRecycleBin(): void {
                 saveTrash();
                 saveAndRender();
                 rend();
+                emit('clippy-react', { category: 'react_restore_from_trash', anim: 'wave', duration: 3000, delay: 200 });
             });
             const db = el('button', { className: 'xp-dialog-btn', text: 'Удалить' });
             db.addEventListener('click', () => {

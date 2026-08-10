@@ -263,8 +263,11 @@ function showTileDialog(isFolder: boolean, item: LinkItem | null): void {
                 links[editCtx.tileIndex!].name = resolvedName;
                 const fw = wmGet('folder-' + editCtx.tileIndex);
                 if (fw) fw.el.querySelector('.xp-titlebar-title')!.textContent = resolvedName;
+                emit('clippy-react', { category: 'react_rename_shortcut', anim: 'wave', duration: 3000, delay: 200 });
             } else {
                 links.push({ isFolder: true, name: resolvedName, items: [] });
+                // F7: Реакция на создание новой папки
+                emit('clippy-react', { category: 'react_new_folder', anim: 'think', duration: 4000, delay: 300 });
             }
         } else {
             let url = ui ? ui.value.trim() : '';
@@ -281,6 +284,7 @@ function showTileDialog(isFolder: boolean, item: LinkItem | null): void {
                 } else {
                     links[editCtx.tileIndex!] = newItem;
                 }
+                emit('clippy-react', { category: 'react_rename_shortcut', anim: 'wave', duration: 3000, delay: 200 });
             } else if (editCtx.folderIndex !== null) {
                 links[editCtx.folderIndex].items!.push(newItem);
                 refreshFolderWindow(editCtx.folderIndex);

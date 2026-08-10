@@ -1,8 +1,9 @@
 // Калькулятор в XP-стиле: обычный/инженерный режимы, меню Вид/Правка/Справка.
-// Порт CALCULATOR (script.js:4442-4549). Клик-реакции Clippy не портируются.
+// Порт CALCULATOR (script.js:4442-4549).
 // Стили — в src/styles/apps.css (перенесены глобально, здесь не дублируются).
 
 import { el, xpIconHtml } from '../../../core/dom';
+import { emit } from '../../../core/events';
 import { registerAction } from '../../../core/actions';
 import { wmCreate, wmGet, wmRestore, wmFocus, wmResizeToContent, wmWindows } from '../../../wm/windowManager';
 
@@ -145,8 +146,14 @@ export function openCalculator(): void {
                 switch (btn.dataset.fn) {
                     case 'dot': if (!cs.disp.includes('.')) cs.disp += '.'; break;
                     case 'eq': if (cs.op && !cs.waitOp) {
-                        cs.disp = fmt(calc(cs.prev ?? 0, v, cs.op));
+                        const isDivZero = cs.op === '/' && v === 0;
+                        const calcRes = calc(cs.prev ?? 0, v, cs.op);
+                        cs.disp = fmt(calcRes);
                         cs.op = null; cs.prev = null; cs.waitOp = false;
+                        // Реакции Скрепки на результат (порядок else-if — как в оригинале)
+                        if (isDivZero) emit('clippy-react', { category: 'react_calc_divzero', anim: 'alert', duration: 5000, delay: 100 });
+                        else if (calcRes >= 1000000) emit('clippy-react', { category: 'react_calc_million', anim: 'excited', duration: 5000, delay: 100 });
+                        else if (calcRes === 42) emit('clippy-react', { category: 'react_calc_42', anim: 'wave', duration: 6000, delay: 100 });
                     } break;
                     case 'c': { const mem = cs.mem; cs.disp = '0'; cs.prev = null; cs.op = null; cs.waitOp = false; cs.mem = mem; break; }
                     case 'ce': cs.disp = '0'; break;

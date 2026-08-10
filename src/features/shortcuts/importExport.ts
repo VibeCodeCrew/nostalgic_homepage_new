@@ -71,6 +71,9 @@ function bindImportUpload(): void {
                 if (d.edge_tile_opacity) setItem(STORAGE.opacity, String(d.edge_tile_opacity));
                 if (d.edge_tile_blur) setItem(STORAGE.blur, String(d.edge_tile_blur));
                 if (d.edge_custom_bg) setItem(STORAGE.bg, String(d.edge_custom_bg));
+                // В оригинале react_import_data не имела триггера — привязана к успешному импорту.
+                // Пузырь почти не виден: location.reload() сразу после emit'а перезагружает страницу.
+                emit('clippy-react', { category: 'react_import_data', anim: 'wave', duration: 4000, delay: 500 });
                 location.reload();
             } catch (err) {
                 alert('Ошибка при чтении файла');

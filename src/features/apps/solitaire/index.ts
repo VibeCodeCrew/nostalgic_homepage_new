@@ -9,6 +9,7 @@
 import './solitaire.css';
 import { xpIconHtml } from '../../../core/dom';
 import { registerAction } from '../../../core/actions';
+import { emit } from '../../../core/events';
 import { wmCreate, wmGet, wmRestore, wmFocus } from '../../../wm/windowManager';
 
 interface SolCard {
@@ -52,6 +53,9 @@ function initSolitaireGame(): void {
     let waste: SolCard[] = [];
     let score = 0;
     let dragSrc: DragSrc | null = null;
+
+    // Счётчики для реакций Clippy: первый ход и «пат» (10+ ходов без хода в дом)
+    let solFirstMove = true, solMoveCount = 0, solFoundMoves = 0;
 
     // Активные drag-сессии: чистятся на mouseup и при закрытии окна (фикс аудита)
     const dragCleanups = new Set<() => void>();
@@ -179,6 +183,7 @@ function initSolitaireGame(): void {
             score += 500;
             const sc2 = document.getElementById('sol-score');
             if (sc2) sc2.textContent = 'Счёт: ' + score;
+            emit('clippy-react', { category: 'react_solitaire_win', anim: 'excited', delay: 500 });
             startWinAnimation();
         }
     }
@@ -415,6 +420,7 @@ function initSolitaireGame(): void {
                 score += 10;
                 if (tableau[idx].length && !tableau[idx][tableau[idx].length - 1].face) { tableau[idx][tableau[idx].length - 1].face = true; score += 5; }
             }
+            solFoundMoves++;
         } else if (dest === 'tableau') {
             const col = tableau[destIdx];
             const topCard = col.length ? col[col.length - 1] : null;
@@ -430,6 +436,17 @@ function initSolitaireGame(): void {
                 score += 3;
                 if (tableau[idx].length && !tableau[idx][tableau[idx].length - 1].face) { tableau[idx][tableau[idx].length - 1].face = true; score += 5; }
             }
+        }
+        // E7: первый ход в Косынке
+        if (solFirstMove) {
+            solFirstMove = false;
+            emit('clippy-react', { category: 'react_sol_firstmove', anim: 'talk', duration: 5000, delay: 300 });
+        }
+        // E8: возможный пат — 10+ ходов без хода в дом
+        solMoveCount++;
+        if ((solMoveCount - solFoundMoves) > 10) {
+            solMoveCount = 0;
+            emit('clippy-react', { category: 'react_sol_stuck', anim: 'think', duration: 5000, delay: 300 });
         }
         render();
         return true;

@@ -1,8 +1,9 @@
 // MS Paint — canvas-рисовалка: карандаш, заливка, ластик, фигуры, текст.
-// Порт MS PAINT (script.js:5799-5912). Клик-реакции Clippy не портируются.
+// Порт MS PAINT (script.js:5799-5912).
 
 import './paint.css';
 import { el, xpIconHtml } from '../../../core/dom';
+import { emit } from '../../../core/events';
 import { registerAction } from '../../../core/actions';
 import { wmCreate, wmRestore, wmFocus, wmResizeToContent, wmWindows } from '../../../wm/windowManager';
 
@@ -21,6 +22,8 @@ export function openPaint(): void {
 
         let tool = 'pencil', color = '#000000', size = 3, drawing = false, startX = 0, startY = 0;
         let snapshot: ImageData | null = null;
+        // Трекинг непрерывного рисования для реакции Скрепки (30+ секунд, один раз)
+        let paintDrawStart: number | null = null, paintLongShown = false;
 
         const COLORS = ['#000000', '#7f7f7f', '#880000', '#ff0000', '#ff7f00', '#ffff00', '#00a500', '#00ff00', '#003080', '#0000ff', '#4b0082', '#8f00ff', '#ff69b4', '#ffffff', '#c0c0c0', '#d2691e'];
         const colorWrap = document.getElementById('paint-colors');
@@ -55,6 +58,8 @@ export function openPaint(): void {
         if (clearBtn) clearBtn.addEventListener('click', () => {
             ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Реакция Скрепки на очистку холста
+            emit('clippy-react', { category: 'react_paint_clear', anim: 'wave', duration: 4000, delay: 100 });
         });
         const saveBtn = document.getElementById('paint-save');
         if (saveBtn) saveBtn.addEventListener('click', () => {
@@ -62,6 +67,8 @@ export function openPaint(): void {
             a.href = canvas.toDataURL();
             a.download = 'paint.png';
             a.click();
+            // Реакция Скрепки на сохранение
+            emit('clippy-react', { category: 'react_paint_save', anim: 'excited', duration: 4000, delay: 100 });
         });
 
         function getPos(e: MouseEvent): { x: number; y: number } {
@@ -96,6 +103,7 @@ export function openPaint(): void {
             drawing = true;
             startX = p.x;
             startY = p.y;
+            if (!paintLongShown) paintDrawStart = Date.now();
             if (tool === 'fill') { floodFill(p.x, p.y, color); return; }
             if (tool === 'text') {
                 const t = prompt('Текст:');
@@ -107,6 +115,11 @@ export function openPaint(): void {
         });
         canvas.addEventListener('mousemove', e => {
             if (!drawing) return;
+            // F3: реакция на 30+ секунд непрерывного рисования
+            if (paintDrawStart && !paintLongShown && Date.now() - paintDrawStart > 30000) {
+                paintLongShown = true;
+                emit('clippy-react', { category: 'react_paint_long', anim: 'think', duration: 5000 });
+            }
             const p = getPos(e);
             if (tool === 'pencil') {
                 ctx.strokeStyle = color; ctx.lineWidth = size; ctx.lineCap = 'round';

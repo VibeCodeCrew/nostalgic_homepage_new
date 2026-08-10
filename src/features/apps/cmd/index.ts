@@ -1,11 +1,12 @@
 // CMD.EXE — эмуляция командной строки Windows XP.
-// Порт CMD.EXE (script.js:5945-6028). Клик-реакции Clippy не портируются.
+// Порт CMD.EXE (script.js:5945-6028). Реакции Clippy — через emit('clippy-react').
 // Фиксы аудита: история команд ограничена 50 записями (в оригинале росла
 // бесконечно); все setTimeout-цепочки (ping, format, crash) отменяются
 // при закрытии окна через onClose.
 
 import './cmd.css';
 import { el } from '../../../core/dom';
+import { emit } from '../../../core/events';
 import { registerAction, runAction, ACTION } from '../../../core/actions';
 import { wmCreate, wmGet, wmRestore, wmFocus, wmClose, wmWindows } from '../../../wm/windowManager';
 
@@ -45,6 +46,8 @@ export function openCmd(): void {
         const COMMANDS: Record<string, (args: string) => void> = {
             help: () => {
                 ['cls - очистить экран', 'dir - список файлов', 'echo [текст] - вывести текст', 'cd [путь] - сменить каталог', 'set - переменные среды', 'ver - версия Windows', 'color - цвет текста', 'time - текущее время', 'date - текущая дата', 'title [заголовок] - заголовок окна', 'ping [хост] - пинг', 'ipconfig - сетевые настройки', 'tasklist - список задач', 'taskkill - завершить задачу', 'chkdsk - проверка диска', 'format - форматировать диск', 'shutdown - завершение работы', 'exit - закрыть окно'].forEach(l => { print(l); });
+                // F4: реакция Clippy на help
+                emit('clippy-react', { category: 'react_cmd_help', anim: 'wave', duration: 4000, delay: 300 });
             },
             ver: () => { print('Microsoft Windows XP [Версия 5.1.2600]'); },
             cls: () => { out!.innerHTML = ''; },
@@ -85,6 +88,8 @@ export function openCmd(): void {
             tasklist: () => { ['Image Name      PID Session Name  Mem Usage', '============  ===== ============ ==========', 'System Idle P.    0 Console       28 K', 'System            4 Console      216 K', 'explorer.exe    888 Console   18,452 K', 'iexplore.exe   1024 Console   32,768 K', 'notepad.exe    1337 Console    4,096 K'].forEach(l => { print(l); }); },
             taskkill: () => {
                 print('УСПЕХ: процесс завершён.');
+                // F5: реакция Clippy на taskkill
+                emit('clippy-react', { category: 'react_taskkill', anim: 'wave', duration: 4000, delay: 400 });
             },
             chkdsk: () => { ['Тип файловой системы: NTFS', 'Серийный номер тома: 3A2F-87D1', 'CHKDSK проверяет файлы (этап 1 из 3)...', '  100 percent of file verification complete.', 'CHKDSK проверяет индексы (этап 2 из 3)...', '  100 percent completed.', 'CHKDSK проверяет дескрипторы безопасности (этап 3 из 3)...', 'Windows проверила файловую систему и не обнаружила проблем.', '  20,971,520 КБ всего места на диске.', '  11,534,336 КБ занято.', '   9,437,184 КБ свободно.'].forEach(l => { print(l); }); },
             format: () => {
@@ -98,6 +103,7 @@ export function openCmd(): void {
             systeminfo: () => { ['Имя узла:   USER-PC', 'ОС:         Microsoft Windows XP Professional', 'Версия ОС:  5.1.2600 Service Pack 3 Build 2600', 'ОС (доп.):  Standalone Workstation', 'ОЗУ:        1024 МБ', 'Пр. память: ' + Math.floor(Math.random() * 400 + 200) + ' МБ'].forEach(l => { print(l); }); },
             crash: () => {
                 print('Инициирован критический сбой системы...');
+                emit('clippy-react', { category: 'react_cmd_crash', anim: 'alert', duration: 3000, delay: 100 });
                 // BSOD-экран — зона другой фичи; вызываем через командный реестр (действие 'bsod')
                 later(() => { runAction('bsod'); }, 800);
             },
@@ -123,6 +129,10 @@ export function openCmd(): void {
                 else if (cmd) {
                     print("'" + cmd + "' не является внутренней или внешней командой", 'cmd-error');
                     print('исполняемой программой или пакетным файлом.', 'cmd-error');
+                    // F4: реакция Clippy на неизвестную команду (25%, как в оригинале)
+                    if (Math.random() < 0.25) {
+                        emit('clippy-react', { category: 'react_cmd_unknown', anim: 'think', duration: 4000, delay: 400 });
+                    }
                 }
             } else if (e.key === 'ArrowUp') {
                 histIdx = Math.min(histIdx + 1, history.length - 1);
