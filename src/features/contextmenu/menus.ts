@@ -49,7 +49,9 @@ export function showSysIconContextMenu(x: number, y: number, id: string): void {
         showContextMenu(x, y, [
             { label: 'Открыть',   icon: xpIconHtml('my-computer', 16), action: () => { runAction(ACTION.openMyComputer); } },
             SEP,
-            { label: 'Свойства', icon: '⚙️', action: () => { runAction(ACTION.openSettings); } },
+            // Как в настоящем XP: «Свойства» у Моего компьютера — это Свойства системы.
+            // (В оригинале пункт вёл в Свойства экрана — исправлено по запросу пользователя.)
+            { label: 'Свойства', icon: '⚙️', action: () => { runAction(ACTION.openSysInfo); } },
         ]);
     } else if (id === 'recycle') {
         showContextMenu(x, y, [
