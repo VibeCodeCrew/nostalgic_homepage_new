@@ -58,7 +58,14 @@ export function closeStartMenu(): void {
 
 function openCascadeNow(): void {
     const btn = document.querySelector<HTMLElement>('.sm-allprograms-btn');
-    if (btn) openAllProgramsCascade(btn);
+    if (!btn) return;
+    // Повторный клик — закрыть (toggle, как в Windows)
+    const cm = document.getElementById('context-menu');
+    if (cm && cm.classList.contains('sm-cascade') && !cm.classList.contains('hidden')) {
+        hideContextMenu();
+        return;
+    }
+    openAllProgramsCascade(btn);
 }
 
 function startMenuAction(a: string): void {
@@ -107,7 +114,11 @@ export function initStartMenu(): void {
     if (menu) {
         menu.addEventListener('click', e => {
             const item = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
-            if (item && menu.contains(item)) startMenuAction(item.dataset.action!);
+            if (!item || !menu.contains(item)) return;
+            // «Все программы»: не даём document-обработчику «клик вне меню» (features/contextmenu)
+            // тут же закрыть только что открытый каскад
+            if (item.dataset.action === 'allprograms') e.stopPropagation();
+            startMenuAction(item.dataset.action!);
         });
     }
 

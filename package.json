@@ -1,7 +1,7 @@
 {
   "name": "nostalgic-startpage",
   "private": true,
-  "version": "2.5.0",
+  "version": "2.5.1",
   "type": "module",
   "description": "Windows XP desktop as your new tab page — modular TS rebuild",
   "scripts": {

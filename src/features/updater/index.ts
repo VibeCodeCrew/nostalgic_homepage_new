@@ -1,7 +1,7 @@
-// Проверка обновлений расширения: fetch manifest.json из GitHub, сравнение
-// версий, диалог ручной установки через chrome.downloads. Индикатор в трее
-// и меню-баре macos — через features/tray/updateBell (setUpdateAvailable).
-// Порт блока UPDATER из оригинала (script.js:6047-6169), паритет 1:1.
+// Проверка обновлений расширения: последний релиз на GitHub (releases API
+// репозитория nostalgic_homepage_new), сравнение версий, диалог ручной
+// установки через chrome.downloads. Индикатор в трее и меню-баре macos —
+// через features/tray/updateBell (setUpdateAvailable).
 
 import { escapeHtml, xpIconHtml } from '../../core/dom';
 import { emit } from '../../core/events';
@@ -10,12 +10,15 @@ import { registerAction, ACTION } from '../../core/actions';
 import { wmGet, wmCreate, wmRestore, wmFocus, wmClose, wmResizeToContent } from '../../wm/windowManager';
 import { setUpdateAvailable, type UpdateInfo } from '../tray/updateBell';
 
-const _UPD_MANIFEST = 'https://raw.githubusercontent.com/VibeCodeCrew/windows_xp_homepage/main/manifest.json';
-const _UPD_ZIP      = 'https://github.com/VibeCodeCrew/windows_xp_homepage/archive/refs/heads/main.zip';
+// Последний релиз нового репозитория — источник обновлений
+const _UPD_API = 'https://api.github.com/repos/VibeCodeCrew/nostalgic_homepage_new/releases/latest';
+const _UPD_PAGE = 'https://github.com/VibeCodeCrew/nostalgic_homepage_new/releases/latest';
 
 // { current, remote }, когда найдено обновление. Держим локальную копию
 // (параллельно updateBell) для мока в тестах — см. getter/setter ниже.
 let _updateAvail: UpdateInfo | null = null;
+// URL ZIP-ассета последнего релиза (для кнопки «Скачать»)
+let _updateZipUrl: string | null = null;
 
 export function getUpdateAvail(): UpdateInfo | null {
     return _updateAvail;
@@ -47,19 +50,30 @@ function localVersion(): string {
     return '0.0.0';
 }
 
+interface GhRelease {
+    tag_name?: string;
+    assets?: Array<{ name?: string; browser_download_url?: string }>;
+}
+
 export async function checkForUpdates(silent: boolean): Promise<void> {
     try {
-        const resp = await fetch(_UPD_MANIFEST + '?_nc=' + Date.now());
+        const resp = await fetch(_UPD_API + '?_nc=' + Date.now(), {
+            headers: { 'Accept': 'application/vnd.github+json' },
+        });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const remote = await resp.json() as { version?: string };
+        const release = await resp.json() as GhRelease;
+        // Версия из тега релиза ('v2.5.1' → '2.5.1')
+        const remoteVer = (release.tag_name || '').replace(/^v/i, '');
         const local = localVersion();
-        if (remote.version && _verGt(remote.version, local)) {
-            setUpdateAvail({ current: local, remote: remote.version });
+        if (remoteVer && _verGt(remoteVer, local)) {
+            const zipAsset = (release.assets || []).find(a => a.name && a.name.endsWith('.zip') && a.browser_download_url);
+            _updateZipUrl = zipAsset ? zipAsset.browser_download_url! : null;
+            setUpdateAvail({ current: local, remote: remoteVer });
             emit('update-available');
             if (silent) {
-                showNotification('Windows Update', 'Доступна версия ' + remote.version + ' (сейчас ' + local + ')', xpIconHtml('update', 16), 7000);
+                showNotification('Windows Update', 'Доступна версия ' + remoteVer + ' (сейчас ' + local + ')', xpIconHtml('update', 16), 7000);
             } else {
-                openUpdateDialog(local, remote.version);
+                openUpdateDialog(local, remoteVer);
             }
         } else {
             setUpdateAvail(null);
@@ -140,7 +154,12 @@ export function openUpdateDialog(currentVer: string, newVer: string): void {
 
     dlBtn.addEventListener('click', () => {
         if (typeof chrome !== 'undefined' && chrome.downloads) {
-            chrome.downloads.download({ url: _UPD_ZIP, filename: 'nostalgic-startpage-update.zip' });
+            if (_updateZipUrl) {
+                chrome.downloads.download({ url: _updateZipUrl, filename: 'nostalgic-startpage-update.zip' });
+            } else {
+                // Нет ZIP-ассета в релизе — открываем страницу релиза
+                chrome.tabs.create({ url: _UPD_PAGE });
+            }
         }
         dlBtn.textContent = '✅ Загружается...'; dlBtn.disabled = true;
         showNotification('Windows Update', 'Загрузка начата. После завершения распакуйте поверх папки расширения.', '⬇️', 7000);
