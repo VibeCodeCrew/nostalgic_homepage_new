@@ -263,7 +263,7 @@ export function initContextMenuRouter(): void {
         e.preventDefault();
         const x = e.clientX, y = e.clientY;
         const target = e.target as HTMLElement;
-        if (target.closest('#context-menu') || target.closest('#start-menu')) return;
+        if (target.closest('.xp-context-menu') || target.closest('#start-menu')) return;
 
         const sysIcon = target.closest<HTMLElement>('.sys-icon');
         const linkIcon = target.closest<HTMLElement>('.desktop-icon.link-icon:not(.add-btn-tile)');
@@ -328,7 +328,7 @@ export function initContextMenuRouter(): void {
 
     // Клик вне меню — скрыть (как в оригинале, GLOBAL LISTENERS)
     document.addEventListener('click', e => {
-        if (!(e.target as HTMLElement).closest('#context-menu')) hideContextMenu();
+        if (!(e.target as HTMLElement).closest('.xp-context-menu')) hideContextMenu();
     });
     window.addEventListener('blur', hideContextMenu);
     window.addEventListener('resize', hideContextMenu);

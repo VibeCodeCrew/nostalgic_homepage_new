@@ -41,3 +41,16 @@
     animation: ctx-appear 0.1s ease-out;
     transform-origin: top left;
 }
+
+/* Оверлей второго уровня (контекстное меню из пункта меню) — поверх основного */
+#context-menu-overlay { z-index: 9700; }
+#context-menu-overlay:not(.hidden) {
+    animation: ctx-appear 0.1s ease-out;
+    transform-origin: top left;
+}
+/* Пункт, открывший оверлей, остаётся подсвеченным — видно, что вызвано */
+.xp-ctx-item.ctx-active { background: #316ac5; color: white; }
+.xp-context-menu.sm-cascade .xp-ctx-item.ctx-active {
+    background: linear-gradient(180deg, #2050c8 0%, #1840b0 100%);
+    color: #fff;
+}

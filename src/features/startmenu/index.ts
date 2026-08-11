@@ -23,7 +23,6 @@ export { openRun } from './runDialog';
 export { openTaskManager } from './taskManager';
 
 let startMenuOpen = false;
-let cascadeTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function isStartMenuOpen(): boolean {
     return startMenuOpen;
@@ -54,7 +53,6 @@ export function closeStartMenu(): void {
         sb.setAttribute('aria-expanded', 'false');
     }
     startMenuOpen = false;
-    if (cascadeTimer !== null) { clearTimeout(cascadeTimer); cascadeTimer = null; }
     hideContextMenu(); // закрыть каскад «Все программы» вместе с меню
 }
 
@@ -113,17 +111,8 @@ export function initStartMenu(): void {
         });
     }
 
-    // «Все программы»: каскад по hover (с задержкой, как в XP) и по клику
-    const apBtn = document.querySelector<HTMLElement>('.sm-allprograms-btn');
-    if (apBtn) {
-        apBtn.addEventListener('mouseenter', () => {
-            if (cascadeTimer !== null) clearTimeout(cascadeTimer);
-            cascadeTimer = setTimeout(openCascadeNow, 300);
-        });
-        apBtn.addEventListener('mouseleave', () => {
-            if (cascadeTimer !== null) { clearTimeout(cascadeTimer); cascadeTimer = null; }
-        });
-    }
+    // «Все программы»: каскад открывается по КЛИКУ (через делегирование data-action),
+    // hover-открытие отключено по требованию UX.
 
     // Клик вне меню — закрыть
     document.addEventListener('click', e => {
