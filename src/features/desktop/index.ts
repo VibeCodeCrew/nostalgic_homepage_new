@@ -326,6 +326,9 @@ export function initDesktop(): void {
     on('settings-changed', ({ key }) => {
         if (key === 'viewMode') renderDesktop();
     });
+    // Смена темы (xp/macos) → перерисовка: системные иконки (Macintosh HD, корзина
+    // уходит в Dock), стили иконок/выделения — всё пересобирается только здесь.
+    on('theme-changed', () => { renderDesktop(); });
 
     // Перерисовка НЕ подписана на 'links-changed' автоматически: многие операции
     // (drag-позиции) пишут saveLinks() без перерисовки — как в оригинале.
