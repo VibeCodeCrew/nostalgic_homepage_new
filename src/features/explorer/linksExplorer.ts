@@ -5,6 +5,7 @@ import { el, xpIconHtml } from '../../core/dom';
 import { links, saveLinks, saveTrash, trashedLinks } from '../../core/state';
 import { wmCreate, wmWindows, wmRestore, wmFocus } from '../../wm/windowManager';
 import { openLinkItem, saveAndRender } from '../desktop';
+import { isGroupingEnabled, groupSingles, getCategoryIcon, CATEGORY_OTHER } from '../grouping';
 import type { LinkItem } from '../../core/types';
 
 export function openLinksExplorer(): void {
@@ -71,6 +72,30 @@ export function openLinksExplorer(): void {
 
     const rows = el('div', { className: 'xp-explorer-rows' });
 
+    // Состояние свёртки секций (живёт, пока открыто окно)
+    const collapsedCats = new Set<string>();
+    const useGrouping = isGroupingEnabled('explorer');
+
+    function makeRow(item: LinkItem, i: number, zebra: number): HTMLElement {
+        const row = el('div', { className: 'xp-explorer-row' + (zebra % 2 === 0 ? ' even' : '') });
+
+        const ico = el('img', { className: 'xp-explorer-row-ico', alt: '' });
+        ico.src = 'chrome-extension://' + chrome.runtime.id + '/_favicon/?pageUrl=' + encodeURIComponent(item.url || '') + '&size=16';
+        ico.onerror = () => { ico.style.visibility = 'hidden'; };
+
+        row.appendChild(ico);
+        row.appendChild(el('div', { className: 'xp-explorer-row-name', text: item.name || item.url }));
+        row.appendChild(el('div', { className: 'xp-explorer-row-url', text: item.url }));
+
+        row.addEventListener('click', () => {
+            rows.querySelectorAll('.xp-explorer-row').forEach(r => r.classList.remove('selected'));
+            row.classList.add('selected');
+            selectedIdx = i;
+        });
+        row.addEventListener('dblclick', () => { openLinkItem(item); });
+        return row;
+    }
+
     function renderList(): void {
         rows.innerHTML = '';
         selectedIdx = -1;
@@ -78,26 +103,43 @@ export function openLinksExplorer(): void {
             rows.innerHTML = '<div style="padding:16px;color:#666;font-family:Tahoma,sans-serif;font-size:11px;">Ярлыков нет. Добавьте их через рабочий стол.</div>';
             return;
         }
-        links.forEach((item, i) => {
-            if (item.isFolder) return; // пропускаем папки
-            const row = el('div', { className: 'xp-explorer-row' + (i % 2 === 0 ? ' even' : '') });
+        // Одиночные ярлыки с их индексами в links (ручные папки пропускаем, как в оригинале)
+        const singles: Array<{ item: LinkItem; idx: number }> = [];
+        links.forEach((item, i) => { if (!item.isFolder) singles.push({ item, idx: i }); });
 
-            const ico = el('img', { className: 'xp-explorer-row-ico', alt: '' });
-            ico.src = 'chrome-extension://' + chrome.runtime.id + '/_favicon/?pageUrl=' + encodeURIComponent(item.url || '') + '&size=16';
-            ico.onerror = () => { ico.style.visibility = 'hidden'; };
+        if (!useGrouping) {
+            singles.forEach((s, z) => rows.appendChild(makeRow(s.item, s.idx, z)));
+            return;
+        }
 
-            row.appendChild(ico);
-            row.appendChild(el('div', { className: 'xp-explorer-row-name', text: item.name || item.url }));
-            row.appendChild(el('div', { className: 'xp-explorer-row-url', text: item.url }));
+        // Режим группировки: секции-свёртки по категориям
+        const g = groupSingles(singles.map(s => s.item));
+        const idxOf = new Map<LinkItem, number>(singles.map(s => [s.item, s.idx]));
+        let zebra = 0;
 
-            row.addEventListener('click', () => {
-                rows.querySelectorAll('.xp-explorer-row').forEach(r => r.classList.remove('selected'));
-                row.classList.add('selected');
-                selectedIdx = i;
-            });
-            row.addEventListener('dblclick', () => { openLinkItem(item); });
-            rows.appendChild(row);
-        });
+        function appendCategory(name: string, items: LinkItem[], collapsible: boolean): void {
+            const hdr = el('div', { className: 'xp-explorer-cat' });
+            const arrow = el('span', { className: 'xp-explorer-cat-arrow', text: collapsible && collapsedCats.has(name) ? '▸' : '▾' });
+            hdr.appendChild(arrow);
+            hdr.innerHTML += '<img class="xp-icon-img" src="icons/16/' + getCategoryIcon(name) + '.png" width="16" height="16" alt="">';
+            hdr.appendChild(el('span', { text: name }));
+            hdr.appendChild(el('span', { className: 'xp-explorer-cat-count', text: '(' + items.length + ')' }));
+            rows.appendChild(hdr);
+            const collapsed = collapsible && collapsedCats.has(name);
+            if (!collapsed) {
+                items.forEach(item => rows.appendChild(makeRow(item, idxOf.get(item)!, zebra++)));
+            }
+            if (collapsible) {
+                hdr.addEventListener('click', () => {
+                    if (collapsedCats.has(name)) collapsedCats.delete(name);
+                    else collapsedCats.add(name);
+                    renderList();
+                });
+            }
+        }
+
+        g.groups.forEach(gr => appendCategory(gr.category, gr.items, true));
+        if (g.rest.length) appendCategory(CATEGORY_OTHER, g.rest, false);
     }
     renderList();
     main.appendChild(rows);

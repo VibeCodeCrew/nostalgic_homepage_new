@@ -46,6 +46,9 @@ export const KEY_DOOM_SAVES = 'doom_saves_v2';
 export const KEY_DOOM_AUDIO = 'doom_audio_v1';
 export const KEY_WORDPAD_CONTENT = 'edge_wordpad_content';
 export const KEY_MRU = 'edge_mru';
+export const KEY_GROUP_STARTMENU = 'edge_group_startmenu'; // автогруппировка в меню Пуск ('true'/'false')
+export const KEY_GROUP_EXPLORER = 'edge_group_explorer';   // автогруппировка в «Мои ярлыки»
+export const KEY_GROUP_RULES = 'edge_group_rules';         // пользовательские правила [{pattern, category}]
 export const KEY_SYSICON_PREFIX = 'edge_sysicon_';
 
 // chrome.storage.local

@@ -7,6 +7,7 @@ import { links } from '../../core/state';
 import { runAction, ACTION } from '../../core/actions';
 import { showContextMenu } from '../contextmenu';
 import { openLinkItem } from '../desktop';
+import { isGroupingEnabled, groupSingles, getCategoryIcon } from '../grouping';
 import type { ContextMenuItem, LinkItem } from '../../core/types';
 
 // Закрыть меню Пуск перед запуском пункта (импорт цикла нет — startmenu
@@ -44,7 +45,9 @@ function linkItem(item: LinkItem): ContextMenuItem {
     return { label: item.name, icon: xpIconHtml('document', 16), action: run(() => { openLinkItem(item); }) };
 }
 
-/** Дерево «Все программы»: Игры ▸, Стандартные ▸, папки рабочего стола ▸, одиночные ярлыки. */
+/** Дерево «Все программы»: Стандартные ▸, Игры ▸, папки рабочего стола ▸, одиночные ярлыки.
+ *  При включённой автогруппировке одиночные ярлыки раскладываются по категориям ▸;
+ *  группа с именем ручной папки сливается с ней (авто-ярлыки дописываются после разделителя). */
 export function buildAllProgramsTree(): ContextMenuItem[] {
     const games: ContextMenuItem = {
         label: 'Игры',
@@ -72,22 +75,52 @@ export function buildAllProgramsTree(): ContextMenuItem[] {
 
     const tree: ContextMenuItem[] = [accessories, games];
 
-    // Папки рабочего стола — каскадом с содержимым
-    links
-        .filter(i => i.isFolder && i.items && i.items.length)
-        .forEach(folder => {
-            tree.push({
-                label: folder.name,
-                icon: xpIconHtml('folder', 16),
-                submenu: folder.items!.map(linkItem),
-            });
-        });
-
-    // Одиночные ярлыки — пунктами верхнего уровня
+    const manualFolders = links.filter(i => i.isFolder && i.items && i.items.length);
     const singles = links.filter(i => !i.isFolder);
-    if (singles.length) {
+
+    // Автогруппировка (если включена): категория → авто-ярлыки;
+    // совпадающая с ручной папкой категория сливается в неё
+    const mergedIntoFolder = new Map<string, LinkItem[]>();
+    let autoGroups: Array<{ category: string; items: LinkItem[] }> = [];
+    let rest = singles;
+    if (isGroupingEnabled('startmenu')) {
+        const g = groupSingles(singles);
+        const folderNames = new Set(manualFolders.map(f => f.name));
+        g.groups.forEach(gr => {
+            if (folderNames.has(gr.category)) mergedIntoFolder.set(gr.category, gr.items);
+            else autoGroups.push(gr);
+        });
+        rest = g.rest;
+    }
+
+    // Папки рабочего стола — каскадом с содержимым (+ слитые автогруппы)
+    manualFolders.forEach(folder => {
+        const submenu: ContextMenuItem[] = folder.items!.map(linkItem);
+        const merged = mergedIntoFolder.get(folder.name);
+        if (merged && merged.length) {
+            submenu.push({ separator: true });
+            merged.forEach(i => submenu.push(linkItem(i)));
+        }
+        tree.push({
+            label: folder.name,
+            icon: xpIconHtml('folder', 16),
+            submenu: submenu,
+        });
+    });
+
+    // Автогруппы категорий (иконка категории)
+    autoGroups.forEach(gr => {
+        tree.push({
+            label: gr.category,
+            icon: xpIconHtml(getCategoryIcon(gr.category), 16),
+            submenu: gr.items.map(linkItem),
+        });
+    });
+
+    // Неразобранные одиночные ярлыки — плоско, как раньше
+    if (rest.length) {
         tree.push({ separator: true });
-        singles.forEach(i => { tree.push(linkItem(i)); });
+        rest.forEach(i => { tree.push(linkItem(i)); });
     }
 
     return tree;

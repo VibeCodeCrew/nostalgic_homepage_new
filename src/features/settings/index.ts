@@ -1,7 +1,7 @@
 // Окно «Свойства: Экран» — порт SETTINGS (script.js:4125-4329).
 // Табы: Тема / Рабочий стол / Заставка / Параметры.
 
-import { STORAGE } from '../../core/keys';
+import { STORAGE, KEY_GROUP_STARTMENU, KEY_GROUP_EXPLORER } from '../../core/keys';
 import { getBool, getInt, setItem, removeItem } from '../../core/store';
 import { settings, updateSetting, setUsername, username } from '../../core/state';
 import { xpIconHtml } from '../../core/dom';
@@ -9,6 +9,8 @@ import { registerAction, runAction, ACTION } from '../../core/actions';
 import { wmClose, wmCreate, wmFocus, wmGet, wmResizeToContent, wmRestore } from '../../wm/windowManager';
 import { renderDesktop, renderDesktopDebounced, ensureSearchWidget } from '../desktop';
 import { setTheme, applyBackground } from '../themes';
+import { isGroupingEnabled } from '../grouping';
+import { openGroupRulesDialog } from '../grouping/rulesDialog';
 import type { ThemeId, ViewMode, SearchEngine, Settings } from '../../core/types';
 
 // Числовые настройки, которыми управляют слайдеры mkR
@@ -209,6 +211,28 @@ function openSettings(): void {
     swLbl.textContent = 'Показывать поиск в режимах Миниатюры и Ярлыки';
     swLbl.style.cssText = 'font-family:Tahoma,sans-serif;font-size:11px;cursor:pointer;';
     swRow.appendChild(swChk); swRow.appendChild(swLbl); parP.appendChild(swRow);
+
+    // Группировка ярлыков по категориям
+    const grSep = document.createElement('div'); grSep.style.cssText = 'border-top:1px solid #d4d0c8;margin:12px 0 8px;'; parP.appendChild(grSep);
+    const grTitle = document.createElement('div'); grTitle.textContent = 'Группировка ярлыков'; grTitle.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;'; parP.appendChild(grTitle);
+
+    function mkGroupChk(id: string, label: string, checked: boolean, onChange: (v: boolean) => void): void {
+        const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:11px;margin-bottom:4px;';
+        const chk = document.createElement('input'); chk.type = 'checkbox'; chk.id = id; chk.checked = checked;
+        chk.addEventListener('change', () => onChange(chk.checked));
+        const lbl = document.createElement('label'); lbl.htmlFor = id; lbl.textContent = label;
+        lbl.style.cssText = 'font-family:Tahoma,sans-serif;font-size:11px;cursor:pointer;';
+        row.appendChild(chk); row.appendChild(lbl); parP.appendChild(row);
+    }
+    mkGroupChk('settings-group-sm-chk', 'Группировать по категориям в меню «Пуск»', isGroupingEnabled('startmenu'), v => {
+        setItem(KEY_GROUP_STARTMENU, String(v));
+    });
+    mkGroupChk('settings-group-exp-chk', 'Группировать по категориям в «Мои ярлыки»', isGroupingEnabled('explorer'), v => {
+        setItem(KEY_GROUP_EXPLORER, String(v));
+    });
+    const grBtn = document.createElement('button'); grBtn.className = 'xp-dialog-btn'; grBtn.textContent = 'Настроить категории…'; grBtn.style.marginTop = '4px';
+    grBtn.addEventListener('click', () => { openGroupRulesDialog(); });
+    parP.appendChild(grBtn);
 
     wmCreate('settings', 'Свойства: Экран', c, 460, 520, xpIconHtml('control-panel', 16));
     setTimeout(() => {
