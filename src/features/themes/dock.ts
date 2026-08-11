@@ -8,7 +8,7 @@ import { settings, trashedLinks } from '../../core/state';
 import { getFaviconUrl } from '../../core/dom';
 import { runAction, ACTION } from '../../core/actions';
 import { rafThrottle } from '../../core/debounce';
-import { showContextMenu, MENU_SEP } from '../contextMenuBridge';
+import { showContextMenu, MENU_SEP } from '../contextmenu';
 import type { ContextMenuItem } from '../../core/types';
 
 export interface DockAppDef {

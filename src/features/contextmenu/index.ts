@@ -7,6 +7,9 @@ import { el, escapeHtml } from '../../core/dom';
 import type { ContextMenuItem } from '../../core/types';
 import './contextmenu.css';
 
+/** Сепаратор меню (в оригинале — строка 'sep' в массиве пунктов). */
+export const MENU_SEP: ContextMenuItem = { separator: true };
+
 function menuEl(): HTMLElement {
     // Элемент всегда есть в index.html; ленивый поиск — модуль может грузиться до DOMContentLoaded
     const node = document.getElementById('context-menu');

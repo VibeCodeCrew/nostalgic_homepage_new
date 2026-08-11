@@ -4,7 +4,7 @@ import { xpIconHtml } from '../../core/dom';
 import { runAction, ACTION } from '../../core/actions';
 import { updateSetting } from '../../core/state';
 import { wmWindows, wmRestore, wmFocus } from '../../wm/windowManager';
-import { showContextMenu, MENU_SEP } from '../contextMenuBridge';
+import { showContextMenu, MENU_SEP } from '../contextmenu';
 import { toggleCalendar } from '../tray/calendar';
 import { getUpdateAvailable } from '../tray/updateBell';
 import { updateClock } from '../tray/clock';

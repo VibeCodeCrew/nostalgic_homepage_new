@@ -79,6 +79,9 @@ body[data-theme="macos"] #taskbar-windows {
     flex: 0 0 auto; gap: 6px;
     margin-left: 6px; padding-left: 8px;
     border-left: 1px solid rgba(0,0,0,0.18);
+    /* fish-eye растит иконки за верхнюю кромку контейнера — не обрезать
+       (базовый XP-стиль имеет overflow:hidden; в оригинале это и был баг) */
+    overflow: visible;
 }
 body[data-theme="macos"] .taskbar-win-btn {
     min-width: 0; width: 44px; height: 44px;

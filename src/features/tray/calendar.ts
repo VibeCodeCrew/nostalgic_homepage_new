@@ -58,11 +58,15 @@ export function toggleCalendar(): void {
         });
     }
     renderCal();
-    const anchor = document.getElementById('tray-clock');
-    if (anchor) {
-        const r = anchor.getBoundingClientRect();
-        root.style.bottom = (window.innerHeight - r.top + 2) + 'px';
-        root.style.right = (window.innerWidth - r.right) + 'px';
+    // В теме macos позиционирует CSS (верхний правый угол, под строкой меню);
+    // #tray-clock там скрыт (display:none) — инлайн-якорь уводил бы календарь за экран
+    if (document.body.dataset.theme !== 'macos') {
+        const anchor = document.getElementById('tray-clock');
+        if (anchor) {
+            const r = anchor.getBoundingClientRect();
+            root.style.bottom = (window.innerHeight - r.top + 2) + 'px';
+            root.style.right = (window.innerWidth - r.right) + 'px';
+        }
     }
     setTimeout(() => {
         document.addEventListener('click', function dismiss(ev) {
