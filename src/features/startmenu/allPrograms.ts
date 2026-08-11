@@ -7,6 +7,7 @@ import { links } from '../../core/state';
 import { runAction, ACTION } from '../../core/actions';
 import { showContextMenu } from '../contextmenu';
 import { openLinkItem } from '../desktop';
+import { showLinkIconContextMenu, showFolderItemContextMenu } from '../contextmenu/menus';
 import { isGroupingEnabled, groupSingles, getCategoryIcon } from '../grouping';
 import type { ContextMenuItem, LinkItem } from '../../core/types';
 
@@ -30,7 +31,16 @@ function appItem(label: string, icon: string, actionName: string): ContextMenuIt
     return { label: label, icon: xpIconHtml(icon, 16), action: run(() => { runAction(actionName); }) };
 }
 
-function linkItem(item: LinkItem): ContextMenuItem {
+/** Расположение ярлыка: верхний уровень links или элемент ручной папки. */
+type LinkLoc = { kind: 'top'; index: number } | { kind: 'child'; folderIdx: number; childIdx: number };
+
+function linkItem(item: LinkItem, loc: LinkLoc): ContextMenuItem {
+    // Правый клик — то же меню, что на рабочем столе (движок сам прячет каскад)
+    const onContextMenu = (x: number, y: number): void => {
+        if (onBeforeRun) onBeforeRun(); // закрыть меню Пуск
+        if (loc.kind === 'top') showLinkIconContextMenu(x, y, loc.index);
+        else showFolderItemContextMenu(x, y, loc.folderIdx, loc.childIdx);
+    };
     const fav = item.customIcon || getFaviconUrl(item.url || '');
     if (fav) {
         const img = document.createElement('img');
@@ -40,9 +50,9 @@ function linkItem(item: LinkItem): ContextMenuItem {
         img.height = 16;
         img.alt = '';
         img.onerror = () => { img.style.visibility = 'hidden'; };
-        return { label: item.name, iconEl: img, action: run(() => { openLinkItem(item); }) };
+        return { label: item.name, iconEl: img, action: run(() => { openLinkItem(item); }), onContextMenu };
     }
-    return { label: item.name, icon: xpIconHtml('document', 16), action: run(() => { openLinkItem(item); }) };
+    return { label: item.name, icon: xpIconHtml('document', 16), action: run(() => { openLinkItem(item); }), onContextMenu };
 }
 
 /** Дерево «Все программы»: Стандартные ▸, Игры ▸, папки рабочего стола ▸, одиночные ярлыки.
@@ -75,31 +85,38 @@ export function buildAllProgramsTree(): ContextMenuItem[] {
 
     const tree: ContextMenuItem[] = [accessories, games];
 
-    const manualFolders = links.filter(i => i.isFolder && i.items && i.items.length);
-    const singles = links.filter(i => !i.isFolder);
+    const manualFolders = links
+        .map((folder, idx) => ({ folder, idx }))
+        .filter(e => e.folder.isFolder && e.folder.items && e.folder.items.length);
+    const singles = links
+        .map((item, idx) => ({ item, idx }))
+        .filter(e => !e.item.isFolder);
 
     // Автогруппировка (если включена): категория → авто-ярлыки;
     // совпадающая с ручной папкой категория сливается в неё
-    const mergedIntoFolder = new Map<string, LinkItem[]>();
-    let autoGroups: Array<{ category: string; items: LinkItem[] }> = [];
+    const mergedIntoFolder = new Map<string, typeof singles>();
+    let autoGroups: Array<{ category: string; items: typeof singles }> = [];
     let rest = singles;
     if (isGroupingEnabled('startmenu')) {
-        const g = groupSingles(singles);
-        const folderNames = new Set(manualFolders.map(f => f.name));
+        const byItem = new Map(singles.map(s => [s.item, s]));
+        const g = groupSingles(singles.map(s => s.item));
+        const folderNames = new Set(manualFolders.map(f => f.folder.name));
         g.groups.forEach(gr => {
-            if (folderNames.has(gr.category)) mergedIntoFolder.set(gr.category, gr.items);
-            else autoGroups.push(gr);
+            const withIdx = gr.items.map(item => byItem.get(item)!);
+            if (folderNames.has(gr.category)) mergedIntoFolder.set(gr.category, withIdx);
+            else autoGroups.push({ category: gr.category, items: withIdx });
         });
-        rest = g.rest;
+        rest = g.rest.map(item => byItem.get(item)!);
     }
 
     // Папки рабочего стола — каскадом с содержимым (+ слитые автогруппы)
-    manualFolders.forEach(folder => {
-        const submenu: ContextMenuItem[] = folder.items!.map(linkItem);
+    manualFolders.forEach(({ folder, idx: folderIdx }) => {
+        const submenu: ContextMenuItem[] = folder.items!.map((child, childIdx) =>
+            linkItem(child, { kind: 'child', folderIdx, childIdx }));
         const merged = mergedIntoFolder.get(folder.name);
         if (merged && merged.length) {
             submenu.push({ separator: true });
-            merged.forEach(i => submenu.push(linkItem(i)));
+            merged.forEach(s => submenu.push(linkItem(s.item, { kind: 'top', index: s.idx })));
         }
         tree.push({
             label: folder.name,
@@ -113,14 +130,14 @@ export function buildAllProgramsTree(): ContextMenuItem[] {
         tree.push({
             label: gr.category,
             icon: xpIconHtml(getCategoryIcon(gr.category), 16),
-            submenu: gr.items.map(linkItem),
+            submenu: gr.items.map(s => linkItem(s.item, { kind: 'top', index: s.idx })),
         });
     });
 
     // Неразобранные одиночные ярлыки — плоско, как раньше
     if (rest.length) {
         tree.push({ separator: true });
-        rest.forEach(i => { tree.push(linkItem(i)); });
+        rest.forEach(s => { tree.push(linkItem(s.item, { kind: 'top', index: s.idx })); });
     }
 
     return tree;

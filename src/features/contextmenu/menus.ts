@@ -7,6 +7,7 @@ import { clearSelection, links, saveTrash, selectedIndices, settings, trashedLin
 import { runAction, ACTION } from '../../core/actions';
 import { minimizeAll, restoreAll, wmClose, wmFocus, wmMaximize, wmMinimize, wmRestore, wmWindows } from '../../wm/windowManager';
 import { dockAddSubmenu, dockHasUrl, addUrlToDock, refreshDockTrash } from '../themes';
+import { isGroupingEnabled, buildCategorySubmenu } from '../grouping';
 import {
     alignToGrid, autoArrange, confirmEmptyTrash, navToUrl, openFolder,
     openLinkItem, refreshFolderWindow, renderDesktop, saveAndRender, trashLink,
@@ -120,6 +121,10 @@ export function showLinkIconContextMenu(x: number, y: number, idx: number): void
             ? [{ label: 'Добавить в Dock', icon: '➕', action: () => { addUrlToDock(item.url || '', item.name); } } as ContextMenuItem]
             : []),
         { label: 'Веб-приложение (в окне)', icon: '🖥️', checked: !!item.app, action: () => { item.app = !item.app; saveAndRender(); } },
+        // Перенос между группами автогруппировки — только когда группировка где-то включена
+        ...(isGroupingEnabled('startmenu') || isGroupingEnabled('explorer')
+            ? [{ label: 'Сменить категорию', icon: xpIconHtml('favorites', 16), submenu: buildCategorySubmenu(item) } as ContextMenuItem]
+            : []),
         SEP,
         { label: 'Изменить', icon: xpIconHtml('rename', 16), action: () => { runAction(ACTION.editShortcut, { index: idx, childIndex: null }); } },
         { label: 'Обновить миниатюру', icon: '📸', action: () => { runAction(ACTION.refreshScreenshot, { url: item.url, item }); } },

@@ -50,6 +50,15 @@ describe('categorize', () => {
         grouping.saveGroupRules([{ pattern: 'habr', category: 'Разработка' }]);
         expect(grouping.categorize('https://habr.com/ru/articles/1')).toBe('Разработка');
     });
+    it('явная категория ярлыка важнее правил и словаря', () => {
+        grouping.saveGroupRules([{ pattern: 'youtube', category: 'Работа' }]);
+        expect(grouping.categorizeItem({ name: 'YT', url: 'https://youtube.com', category: 'Отдых' })).toBe('Отдых');
+        // сброс (без поля) → правила
+        expect(grouping.categorizeItem({ name: 'YT', url: 'https://youtube.com' })).toBe('Работа');
+        // без правил → словарь
+        grouping.saveGroupRules([]);
+        expect(grouping.categorizeItem({ name: 'YT', url: 'https://youtube.com' })).toBe('Видео');
+    });
 });
 
 describe('groupSingles', () => {

@@ -5,8 +5,9 @@
 import './grouping.css';
 import { KEY_GROUP_STARTMENU, KEY_GROUP_EXPLORER, KEY_GROUP_RULES } from '../../core/keys';
 import { getBool, safeParse, setJSON } from '../../core/store';
+import { saveLinks } from '../../core/state';
 import { CATEGORIES, CATEGORY_OTHER } from './categories';
-import type { LinkItem } from '../../core/types';
+import type { ContextMenuItem, LinkItem } from '../../core/types';
 
 export { CATEGORIES, CATEGORY_OTHER };
 export type GroupingTarget = 'startmenu' | 'explorer';
@@ -40,7 +41,7 @@ function hostOf(url: string): string | null {
     }
 }
 
-/** Категория ярлыка по URL. null — не удалось разложить (уйдёт в «Прочее»/плоско). */
+/** Категория ярлыка по URL (правила + словарь). null — не разложено. */
 export function categorize(url: string | undefined): string | null {
     if (!url) return null;
     const host = hostOf(url);
@@ -72,6 +73,34 @@ export function getCategoryIcon(category: string): string {
     return def ? def.icon : 'folder';
 }
 
+/** Эффективная категория ярлыка: явный перенос (item.category) → правила → словарь. */
+export function categorizeItem(item: LinkItem): string | null {
+    if (item.category) return item.category;
+    return categorize(item.url);
+}
+
+/** Подменю «Сменить категорию»: явный перенос ярлыка в другую группу. */
+export function buildCategorySubmenu(item: LinkItem): ContextMenuItem[] {
+    const autoCat = categorize(item.url); // что было бы без явного переноса
+    const submenu: ContextMenuItem[] = [{
+        label: 'Автоматически' + (autoCat ? ' (' + autoCat + ')' : ' — нет'),
+        checked: !item.category,
+        action: () => { delete item.category; saveLinks(); },
+    }, { separator: true }];
+
+    // Доступные категории: словарь (в его порядке) + категории из пользовательских правил
+    const names = CATEGORIES.map(c => c.name);
+    getGroupRules().forEach(r => { if (!names.includes(r.category)) names.push(r.category); });
+    names.forEach(name => {
+        submenu.push({
+            label: name,
+            checked: item.category === name,
+            action: () => { item.category = name; saveLinks(); },
+        });
+    });
+    return submenu;
+}
+
 export interface GroupedSingles {
     /** Категория → ярлыки (в порядке словаря/появления) */
     groups: Array<{ category: string; items: LinkItem[] }>;
@@ -84,7 +113,7 @@ export function groupSingles(singles: LinkItem[]): GroupedSingles {
     const byCat = new Map<string, LinkItem[]>();
     const rest: LinkItem[] = [];
     singles.forEach(item => {
-        const cat = categorize(item.url);
+        const cat = categorizeItem(item);
         if (cat === null) { rest.push(item); return; }
         const bucket = byCat.get(cat);
         if (bucket) bucket.push(item);

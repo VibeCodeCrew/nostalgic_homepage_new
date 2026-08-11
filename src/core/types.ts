@@ -21,6 +21,7 @@ export interface LinkItem {
     customIcon?: string;    // пользовательская иконка (поле оригинала; приоритет над favicon)
     screenshot?: string;    // dataURL превью (НЕ сериализуется в localStorage — живёт в chrome.storage.local)
     app?: boolean;          // открывать в окне веб-приложения (IE6), а не во вкладке
+    category?: string;      // явная категория автогруппировки («Сменить категорию»); важнее правил и словаря
     isFolder?: boolean;
     items?: LinkItem[];     // содержимое папки
     posIcon?: LinkPosition;
@@ -83,6 +84,7 @@ export interface ContextMenuItem {
     icon?: string;        // HTML-строка иконки (xpIconHtml) — доверенная, генерируется нами
     iconEl?: HTMLElement; // либо готовый элемент иконки (фавиконки с onerror-фолбэком)
     action?: () => void;
+    onContextMenu?: (x: number, y: number) => void; // правый клик по пункту (каскад «Все программы»)
     submenu?: ContextMenuItem[];
     checked?: boolean;
     disabled?: boolean;

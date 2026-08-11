@@ -32,6 +32,17 @@ function iconSpan(item: ContextMenuItem): HTMLElement {
     return span;
 }
 
+// Правый клик по пункту меню: пользовательский обработчик (контекстное меню «второго уровня»)
+function bindItemContextMenu(node: HTMLElement, item: ContextMenuItem): void {
+    if (!item.onContextMenu) return;
+    node.addEventListener('contextmenu', (e: MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        hideContextMenu();
+        item.onContextMenu!(e.clientX, e.clientY);
+    });
+}
+
 function buildItem(item: ContextMenuItem): HTMLElement {
     // Пункт с подменю
     if (item.submenu) {
@@ -51,6 +62,7 @@ function buildItem(item: ContextMenuItem): HTMLElement {
             se.appendChild(iconSpan(si));
             se.appendChild(el('span', { html: escapeHtml(si.label || '') }));
             se.addEventListener('click', () => { hideContextMenu(); si.action?.(); });
+            bindItemContextMenu(se, si);
             sub.appendChild(se);
         });
         wrap.appendChild(sub);
@@ -72,6 +84,7 @@ function buildItem(item: ContextMenuItem): HTMLElement {
     if (!item.disabled) {
         node.addEventListener('click', () => { hideContextMenu(); item.action?.(); });
     }
+    bindItemContextMenu(node, item);
     return node;
 }
 
