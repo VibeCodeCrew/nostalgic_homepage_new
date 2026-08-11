@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Nostalgic Startpage",
-  "version": "2.5.1",
+  "version": "2.5.2",
   "description": "Replaces the new tab page with a fully functional Windows XP-style desktop: shortcuts, folders, themes, built-in apps and games.",
   "minimum_chrome_version": "102",
   "icons": {
