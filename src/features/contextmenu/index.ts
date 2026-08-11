@@ -16,7 +16,17 @@ function menuEl(): HTMLElement {
 
 export function hideContextMenu(): void {
     const m = document.getElementById('context-menu');
-    if (m) m.classList.add('hidden');
+    if (m) {
+        m.classList.add('hidden');
+        m.classList.remove('sm-cascade'); // сброс модификатора флаиута «Все программы»
+    }
+}
+
+function iconSpan(item: ContextMenuItem): HTMLElement {
+    const span = el('span', { className: 'ctx-icon' });
+    if (item.iconEl) span.appendChild(item.iconEl);
+    else if (item.icon) span.innerHTML = item.icon;
+    return span;
 }
 
 function buildItem(item: ContextMenuItem): HTMLElement {
@@ -25,15 +35,18 @@ function buildItem(item: ContextMenuItem): HTMLElement {
         const wrap = el('div', {
             className: 'xp-ctx-item xp-ctx-has-submenu',
             style: 'position:relative',
-            html: '<span class="ctx-icon">' + (item.icon || '') + '</span><span>' + escapeHtml(item.label || '') + '</span><span class="ctx-arrow">&#9658;</span>',
         });
+        wrap.appendChild(iconSpan(item));
+        wrap.appendChild(el('span', { html: escapeHtml(item.label || '') }));
+        wrap.appendChild(el('span', { className: 'ctx-arrow', html: '&#9658;' }));
         const sub = el('div', { className: 'xp-submenu hidden' });
         item.submenu.forEach(si => {
             if (si.separator) { sub.appendChild(el('div', { className: 'xp-ctx-separator' })); return; }
             const se = el('div', {
                 className: 'xp-ctx-item' + (si.checked ? ' ctx-check' : ''),
-                html: '<span class="ctx-icon">' + (si.icon || '') + '</span><span>' + escapeHtml(si.label || '') + '</span>',
             });
+            se.appendChild(iconSpan(si));
+            se.appendChild(el('span', { html: escapeHtml(si.label || '') }));
             se.addEventListener('click', () => { hideContextMenu(); si.action?.(); });
             sub.appendChild(se);
         });
@@ -50,16 +63,19 @@ function buildItem(item: ContextMenuItem): HTMLElement {
     // Обычный пункт
     const node = el('div', {
         className: 'xp-ctx-item' + (item.danger ? ' ctx-danger' : '') + (item.disabled ? ' ctx-disabled' : '') + (item.checked ? ' ctx-check' : ''),
-        html: '<span class="ctx-icon">' + (item.icon || '') + '</span><span>' + escapeHtml(item.label || '') + '</span>',
     });
+    node.appendChild(iconSpan(item));
+    node.appendChild(el('span', { html: escapeHtml(item.label || '') }));
     if (!item.disabled) {
         node.addEventListener('click', () => { hideContextMenu(); item.action?.(); });
     }
     return node;
 }
 
-export function showContextMenu(x: number, y: number, items: ContextMenuItem[]): void {
+export function showContextMenu(x: number, y: number, items: ContextMenuItem[], modifierClass?: string): void {
     const m = menuEl();
+    m.className = 'xp-context-menu'; // сброс модификаторов прошлых показов
+    if (modifierClass) m.classList.add(modifierClass);
     m.innerHTML = '';
     items.forEach(item => {
         if (item.separator) { m.appendChild(el('div', { className: 'xp-ctx-separator' })); return; }

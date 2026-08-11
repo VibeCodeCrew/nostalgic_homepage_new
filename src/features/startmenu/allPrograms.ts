@@ -1,129 +1,102 @@
-// Панель «Все программы» меню «Пуск» — порт ALL PROGRAMS (script.js:3315-3424).
-// Папки закрыты по умолчанию; папки рабочего стола показываются с содержимым.
+// «Все программы» — каскадный флаиут вправо, как в настоящем Windows XP
+// (заменяет прежний оверлей-аккордеон). Движок — features/contextmenu
+// (вложенные submenu с hover-раскрытием), стилизация — класс sm-cascade.
 
-import { el, escapeHtml, xpIconHtml, getFaviconUrl } from '../../core/dom';
+import { xpIconHtml, getFaviconUrl } from '../../core/dom';
 import { links } from '../../core/state';
 import { runAction, ACTION } from '../../core/actions';
-import { navToUrl, openLinkItem } from '../desktop';
-import { closeStartMenu } from './index';
-import type { LinkItem } from '../../core/types';
+import { showContextMenu } from '../contextmenu';
+import { openLinkItem } from '../desktop';
+import type { ContextMenuItem, LinkItem } from '../../core/types';
 
-interface ProgItem {
-    name: string;
-    icon?: string;      // HTML-строка иконки (доверенная)
-    favicon?: string;   // URL фавиконки/кастомной иконки
-    action?: () => void;
-    subFolder?: boolean;
-    items?: ProgItem[];
+// Закрыть меню Пуск перед запуском пункта (импорт цикла нет — startmenu
+// вызывает каскад, но каскад не знает о startmenu: используем событийный клик).
+let onBeforeRun: (() => void) | null = null;
+
+/** startmenu передаёт сюда closeStartMenu — вызывается перед запуском пункта. */
+export function setCascadeCloser(fn: () => void): void {
+    onBeforeRun = fn;
 }
 
-export function openAllPrograms(): void {
-    const panel = document.getElementById('sm-all-programs');
-    const list = document.getElementById('sm-programs-list');
-    if (!panel || !list) return;
-    list.innerHTML = '';
-
-    // Папка: Игры (закрыта по умолчанию)
-    const gameItems: ProgItem[] = [
-        { icon: xpIconHtml('minesweeper', 16), name: 'Сапёр',   action: () => { closeStartMenu(); runAction('app:minesweeper'); } },
-        { icon: xpIconHtml('solitaire', 16),   name: 'Косынка', action: () => { closeStartMenu(); runAction('app:solitaire'); } },
-        { icon: xpIconHtml('hearts', 16),      name: 'Червы',   action: () => { closeStartMenu(); runAction('app:hearts'); } },
-        { icon: xpIconHtml('pinball', 16),     name: 'Пинбол',  action: () => { closeStartMenu(); runAction(ACTION.openPinball); } },
-        { icon: xpIconHtml('doom', 16),        name: 'DOOM',    action: () => { closeStartMenu(); runAction(ACTION.openDoom); } },
-    ];
-    list.appendChild(makeFolderBlock('Игры', gameItems, false));
-
-    // Подпапка: Стандартные (встроенные инструменты)
-    const builtins: ProgItem[] = [
-        { icon: xpIconHtml('notepad', 16),    name: 'Блокнот',          action: () => { closeStartMenu(); runAction('app:notepad'); } },
-        { icon: xpIconHtml('wordpad', 16),    name: 'WordPad',          action: () => { closeStartMenu(); runAction('app:wordpad'); } },
-        { icon: xpIconHtml('paint', 16),      name: 'Paint',            action: () => { closeStartMenu(); runAction('app:paint'); } },
-        { icon: xpIconHtml('calculator', 16), name: 'Калькулятор',      action: () => { closeStartMenu(); runAction('app:calculator'); } },
-        { icon: xpIconHtml('cmd', 16),        name: 'Командная строка', action: () => { closeStartMenu(); runAction('app:cmd'); } },
-        { icon: xpIconHtml('taskmgr', 16),    name: 'Диспетчер задач',  action: () => { closeStartMenu(); runAction(ACTION.openTaskmgr); } },
-    ];
-
-    // Папка: Программы — «Стандартные» + папки рабочего стола + одиночные ярлыки
-    const desktopFolders: ProgItem[] = links
-        .filter(i => i.isFolder && i.items && i.items.length)
-        .map(folder => ({
-            subFolder: true,
-            name: folder.name,
-            items: folder.items!.map(child => ({
-                name: child.name,
-                favicon: child.customIcon || getFaviconUrl(child.url || ''),
-                action: () => { closeStartMenu(); navToUrl(child.url || ''); },
-            })),
-        }));
-    const progItems: ProgItem[] = links
-        .filter(i => !i.isFolder)
-        .map(i => ({
-            name: i.name,
-            favicon: i.customIcon || getFaviconUrl(i.url || ''),
-            action: () => { closeStartMenu(); navToUrl(i.url || ''); },
-        }));
-    const progFolderItems: ProgItem[] = [
-        { subFolder: true, name: 'Стандартные', items: builtins },
-        ...desktopFolders,
-        ...progItems,
-    ];
-    list.appendChild(makeFolderBlock('Программы', progFolderItems, false));
-
-    panel.classList.remove('hidden');
+function run(fn: () => void): () => void {
+    return () => {
+        if (onBeforeRun) onBeforeRun();
+        fn();
+    };
 }
 
-function makeFolderBlock(title: string, items: ProgItem[], openByDefault: boolean): HTMLElement {
-    const wrap = el('div', { className: 'sm-prog-folder-wrap' });
-
-    const hdr = el('div', {
-        className: 'sm-prog-folder-header',
-        html:
-            '<svg width="16" height="14" viewBox="0 0 48 40" style="flex-shrink:0">' +
-            '<path d="M2 8 L2 37 L46 37 L46 13 L22 13 L18 8 Z" fill="#f0c040" stroke="#c89828" stroke-width="1"/>' +
-            '<path d="M2 16 L46 16 L46 37 L2 37 Z" fill="#f8d860" stroke="#c89828" stroke-width="0.5"/>' +
-            '</svg><span>' + escapeHtml(title) + '</span>' +
-            '<span class="sm-prog-folder-arrow">' + (openByDefault ? '▾' : '▸') + '</span>',
-    });
-    wrap.appendChild(hdr);
-
-    const body = el('div', { className: 'sm-prog-folder-body' + (openByDefault ? '' : ' hidden') });
-
-    items.forEach(item => {
-        if (item.subFolder) {
-            const sub = makeFolderBlock(item.name, item.items || [], false);
-            sub.classList.add('sm-prog-subfolder');
-            body.appendChild(sub);
-            return;
-        }
-        const node = el('div', { className: 'sm-prog-item sm-prog-item-indent' });
-        if (item.icon) {
-            node.innerHTML = '<span class="sm-prog-no-icon">' + (item.icon.indexOf('<') !== -1 ? item.icon : escapeHtml(item.icon)) + '</span><span>' + escapeHtml(item.name) + '</span>';
-        } else if (item.favicon) {
-            const smImg = el('img', { className: 'sm-prog-favicon', src: item.favicon, alt: '' });
-            smImg.onerror = () => { smImg.style.display = 'none'; };
-            node.appendChild(smImg);
-            node.appendChild(el('span', { text: item.name }));
-        } else {
-            node.innerHTML = '<span class="sm-prog-no-icon">' + xpIconHtml('document', 16) + '</span><span>' + escapeHtml(item.name) + '</span>';
-        }
-        if (item.action) node.addEventListener('click', item.action);
-        body.appendChild(node);
-    });
-    wrap.appendChild(body);
-
-    hdr.addEventListener('click', () => {
-        const isOpen = !body.classList.contains('hidden');
-        body.classList.toggle('hidden', isOpen);
-        hdr.querySelector('.sm-prog-folder-arrow')!.textContent = isOpen ? '▸' : '▾';
-    });
-    return wrap;
+function appItem(label: string, icon: string, actionName: string): ContextMenuItem {
+    return { label: label, icon: xpIconHtml(icon, 16), action: run(() => { runAction(actionName); }) };
 }
 
-/** Одиночный пункт списка программ по ярлыку (используется поиском, если понадобится). */
-export function makeProgItem(item: LinkItem, inFolder: boolean): HTMLElement {
-    const node = el('div', { className: 'sm-prog-item' + (inFolder ? ' sm-prog-item-indent' : '') });
+function linkItem(item: LinkItem): ContextMenuItem {
     const fav = item.customIcon || getFaviconUrl(item.url || '');
-    node.innerHTML = '<img class="sm-prog-favicon" src="' + escapeHtml(fav) + '" alt=""><span>' + escapeHtml(item.name) + '</span>';
-    node.addEventListener('click', () => { closeStartMenu(); openLinkItem(item); });
-    return node;
+    if (fav) {
+        const img = document.createElement('img');
+        img.className = 'sm-cascade-favicon';
+        img.src = fav;
+        img.width = 16;
+        img.height = 16;
+        img.alt = '';
+        img.onerror = () => { img.style.visibility = 'hidden'; };
+        return { label: item.name, iconEl: img, action: run(() => { openLinkItem(item); }) };
+    }
+    return { label: item.name, icon: xpIconHtml('document', 16), action: run(() => { openLinkItem(item); }) };
+}
+
+/** Дерево «Все программы»: Игры ▸, Стандартные ▸, папки рабочего стола ▸, одиночные ярлыки. */
+export function buildAllProgramsTree(): ContextMenuItem[] {
+    const games: ContextMenuItem = {
+        label: 'Игры',
+        icon: xpIconHtml('hearts', 16),
+        submenu: [
+            appItem('Сапёр', 'minesweeper', 'app:minesweeper'),
+            appItem('Косынка', 'solitaire', 'app:solitaire'),
+            appItem('Червы', 'hearts', 'app:hearts'),
+            appItem('Пинбол', 'pinball', ACTION.openPinball),
+            appItem('DOOM', 'doom', ACTION.openDoom),
+        ],
+    };
+    const accessories: ContextMenuItem = {
+        label: 'Стандартные',
+        icon: xpIconHtml('folder', 16),
+        submenu: [
+            appItem('Блокнот', 'notepad', 'app:notepad'),
+            appItem('WordPad', 'wordpad', 'app:wordpad'),
+            appItem('Paint', 'paint', 'app:paint'),
+            appItem('Калькулятор', 'calculator', 'app:calculator'),
+            appItem('Командная строка', 'cmd', 'app:cmd'),
+            appItem('Диспетчер задач', 'taskmgr', ACTION.openTaskmgr),
+        ],
+    };
+
+    const tree: ContextMenuItem[] = [accessories, games];
+
+    // Папки рабочего стола — каскадом с содержимым
+    links
+        .filter(i => i.isFolder && i.items && i.items.length)
+        .forEach(folder => {
+            tree.push({
+                label: folder.name,
+                icon: xpIconHtml('folder', 16),
+                submenu: folder.items!.map(linkItem),
+            });
+        });
+
+    // Одиночные ярлыки — пунктами верхнего уровня
+    const singles = links.filter(i => !i.isFolder);
+    if (singles.length) {
+        tree.push({ separator: true });
+        singles.forEach(i => { tree.push(linkItem(i)); });
+    }
+
+    return tree;
+}
+
+/** Показать каскад «Все программы» справа от кнопки (hover/клик по ней). */
+export function openAllProgramsCascade(anchorBtn: HTMLElement): void {
+    const r = anchorBtn.getBoundingClientRect();
+    // XP открывает флаиут у правого края меню, по верху кнопки;
+    // движок сам удержит панель в вьюпорте
+    showContextMenu(r.right - 2, r.top, buildAllProgramsTree(), 'sm-cascade');
 }

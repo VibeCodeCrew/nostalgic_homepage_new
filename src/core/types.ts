@@ -81,6 +81,7 @@ export interface WindowGeom {
 export interface ContextMenuItem {
     label?: string;
     icon?: string;        // HTML-строка иконки (xpIconHtml) — доверенная, генерируется нами
+    iconEl?: HTMLElement; // либо готовый элемент иконки (фавиконки с onerror-фолбэком)
     action?: () => void;
     submenu?: ContextMenuItem[];
     checked?: boolean;

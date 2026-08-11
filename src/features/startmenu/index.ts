@@ -1,17 +1,21 @@
 // Меню «Пуск»: открытие/закрытие, роутинг действий, шапка с именем/аватаром.
-// Порт секции START MENU (script.js:3202-3313).
+// «Все программы» — каскадный флаиут вправо (как в настоящем XP), MRU — настоящий.
 
 import './startmenu.css';
 import { runAction, ACTION } from '../../core/actions';
 import { registerAction } from '../../core/actions';
-import { username, userAvatar } from '../../core/state';
+import { username } from '../../core/state';
 import { on, emit } from '../../core/events';
-import { openAllPrograms } from './allPrograms';
+import { xpIconHtml } from '../../core/dom';
+import { openAllProgramsCascade, setCascadeCloser } from './allPrograms';
 import { openAvatarPicker } from './avatarPicker';
 import { resolveAvatarSrc } from './avatarPicker';
 import { openSearch } from './search';
 import { openRun } from './runDialog';
 import { openTaskManager } from './taskManager';
+import { openLogoffDialog } from './logoff';
+import { initMru, renderMru } from './mru';
+import { hideContextMenu, showContextMenu } from '../contextmenu';
 
 export { openAvatarPicker } from './avatarPicker';
 export { openSearch } from './search';
@@ -19,6 +23,7 @@ export { openRun } from './runDialog';
 export { openTaskManager } from './taskManager';
 
 let startMenuOpen = false;
+let cascadeTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function isStartMenuOpen(): boolean {
     return startMenuOpen;
@@ -33,6 +38,7 @@ export function toggleStartMenu(): void {
         menu.classList.remove('hidden');
         sb.classList.add('active');
         sb.setAttribute('aria-expanded', 'true');
+        renderMru();
         emit('startmenu-opened'); // реакция Clippy — подписка в features/clippy
     } else {
         closeStartMenu();
@@ -48,12 +54,17 @@ export function closeStartMenu(): void {
         sb.setAttribute('aria-expanded', 'false');
     }
     startMenuOpen = false;
-    const ap = document.getElementById('sm-all-programs');
-    if (ap) ap.classList.add('hidden');
+    if (cascadeTimer !== null) { clearTimeout(cascadeTimer); cascadeTimer = null; }
+    hideContextMenu(); // закрыть каскад «Все программы» вместе с меню
+}
+
+function openCascadeNow(): void {
+    const btn = document.querySelector<HTMLElement>('.sm-allprograms-btn');
+    if (btn) openAllProgramsCascade(btn);
 }
 
 function startMenuAction(a: string): void {
-    if (a === 'allprograms') { openAllPrograms(); return; }
+    if (a === 'allprograms') { openCascadeNow(); return; }
     closeStartMenu();
     switch (a) {
         case 'search':     runAction(ACTION.openSearch);     break;
@@ -77,7 +88,7 @@ function startMenuAction(a: string): void {
         case 'update':     runAction(ACTION.checkUpdates);   break;
         case 'about':      runAction(ACTION.openSysInfo);    break;
         case 'shutdown':   runAction(ACTION.shutdown);       break;
-        case 'logoff':     closeStartMenu(); openAvatarPicker(); break;
+        case 'logoff':     openLogoffDialog();               break;
     }
 }
 
@@ -90,6 +101,9 @@ export function updateStartMenuUser(): void {
 }
 
 export function initStartMenu(): void {
+    // Закрытие меню перед запуском пункта каскада
+    setCascadeCloser(closeStartMenu);
+
     // Делегирование кликов по пунктам меню (CSP-safe)
     const menu = document.getElementById('start-menu');
     if (menu) {
@@ -98,31 +112,50 @@ export function initStartMenu(): void {
             if (item && menu.contains(item)) startMenuAction(item.dataset.action!);
         });
     }
-    // Кнопка «Назад» панели «Все программы»
-    const backBtn = document.querySelector('.sm-back-btn');
-    if (backBtn) {
-        backBtn.addEventListener('click', () => {
-            document.getElementById('sm-all-programs')?.classList.add('hidden');
+
+    // «Все программы»: каскад по hover (с задержкой, как в XP) и по клику
+    const apBtn = document.querySelector<HTMLElement>('.sm-allprograms-btn');
+    if (apBtn) {
+        apBtn.addEventListener('mouseenter', () => {
+            if (cascadeTimer !== null) clearTimeout(cascadeTimer);
+            cascadeTimer = setTimeout(openCascadeNow, 300);
+        });
+        apBtn.addEventListener('mouseleave', () => {
+            if (cascadeTimer !== null) { clearTimeout(cascadeTimer); cascadeTimer = null; }
         });
     }
+
     // Клик вне меню — закрыть
     document.addEventListener('click', e => {
         if (!startMenuOpen) return;
         const target = e.target as HTMLElement;
-        if (!target.closest('#start-menu') && !target.closest('#start-btn')) closeStartMenu();
+        if (!target.closest('#start-menu') && !target.closest('#start-btn') && !target.closest('#context-menu')) closeStartMenu();
     });
-    // Клик по аватару в шапке — выбор рисунка (как logoff в оригинале)
-    const avatar = document.querySelector('.sm-avatar');
+
+    // Аватар в шапке: клик — выбор рисунка, правый клик — меню «Изменить рисунок...»
+    const avatar = document.querySelector<HTMLElement>('.sm-avatar');
     if (avatar) {
-        (avatar as HTMLElement).style.cursor = 'pointer';
-        avatar.addEventListener('click', () => { closeStartMenu(); openAvatarPicker(); });
+        avatar.style.cursor = 'pointer';
+        avatar.addEventListener('click', e => {
+            e.stopPropagation();
+            closeStartMenu();
+            openAvatarPicker();
+        });
+        avatar.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            showContextMenu(e.clientX, e.clientY, [
+                { icon: xpIconHtml('user', 16), label: 'Изменить рисунок...', action: () => { closeStartMenu(); openAvatarPicker(); } },
+            ]);
+        });
     }
 
     updateStartMenuUser();
     on('user-changed', updateStartMenuUser);
+    initMru();
 
-    // Пункт «Все программы» доступен и как действие
-    registerAction('open-all-programs', () => { openAllPrograms(); });
+    // Каскад «Все программы» доступен и как действие
+    registerAction('open-all-programs', openCascadeNow);
     // Системные утилиты
     registerAction(ACTION.openSearch, openSearch);
     registerAction(ACTION.openRun, openRun);

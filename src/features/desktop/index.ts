@@ -63,6 +63,7 @@ export function setWebAppOpener(fn: (item: LinkItem) => void): void {
 
 /** Запуск ярлыка: веб-приложение — в окне, обычная ссылка — переход вкладки. */
 export function openLinkItem(item: LinkItem): void {
+    emit('link-opened', { url: item.url || '', name: item.name });
     if (item && item.app && !item.isFolder && webAppOpener) { webAppOpener(item); return; }
     navToUrl(item.url || '');
 }

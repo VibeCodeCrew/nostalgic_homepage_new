@@ -116,7 +116,7 @@
     padding: 7px 14px; cursor: pointer; user-select: none; flex-shrink: 0;
 }
 .sm-pinned-item:hover { background: linear-gradient(180deg, #2166bd 0%, #1952a3 100%); }
-.sm-pinned-icon { font-size: 26px; flex-shrink: 0; line-height: 1; width: 30px; text-align: center; }
+.sm-pinned-icon { font-size: 26px; flex-shrink: 0; line-height: 1; width: 34px; text-align: center; }
 .sm-pinned-name { font-size: 12px; font-weight: bold; color: #1a1a1a; white-space: nowrap; }
 .sm-pinned-sub  { font-size: 10px; color: #555; margin-top: 1px; white-space: nowrap; }
 .sm-pinned-item:hover .sm-pinned-name,
@@ -165,50 +165,59 @@
 .sm-shutdown-btn:hover { background: linear-gradient(180deg, #4a8aec 0%, #2e6ed8 100%); }
 .sm-shutdown-icon { font-size: 14px; }
 
-
-/* ===================== ALL PROGRAMS PANEL ===================== */
-.sm-allprograms-arrow { margin-left: auto; font-size: 9px; opacity: 0.65; }
-.sm-item:hover .sm-allprograms-arrow { opacity: 1; color: white; }
-
-#sm-all-programs {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: white;
-    overflow-y: auto;
-    z-index: 10;
-}
-
-.sm-back-btn {
-    display: flex; align-items: center; gap: 8px;
-    padding: 6px 14px; font-size: 12px; color: #1a1a1a;
-    cursor: pointer; background: #f0eeec;
-    border-bottom: 2px solid #c0bbb0;
-    font-weight: bold;
-    position: sticky; top: 0; z-index: 1;
-}
-.sm-back-btn:hover { background: #d4d0c8; color: #316ac5; }
-
-/* .sm-prog-folder-wrap (folder container) */
-.sm-prog-folder-header {
+/* Footer: Log Off (та же кнопка, что и завершение работы, с иконкой) */
+.sm-logoff-btn {
+    background: linear-gradient(180deg, #3a7ae0 0%, #2060c8 100%);
+    border: 1px solid #1040a0; border-radius: 3px;
+    padding: 4px 14px; font-size: 11px; cursor: pointer;
     display: flex; align-items: center; gap: 6px;
-    padding: 5px 14px 5px 10px; font-size: 12px;
-    font-weight: bold; color: #1a1a1a;
-    background: #f0eeec; border-bottom: 1px solid #d8d4cc;
-    cursor: pointer; user-select: none;
+    font-family: 'Trebuchet MS', Tahoma, sans-serif;
+    color: #fff; text-shadow: 0 1px rgba(0,0,80,0.4);
+    box-shadow: inset 0 1px rgba(255,255,255,0.25), 0 1px 2px rgba(0,0,0,0.35);
+    white-space: nowrap; margin-right: 8px;
 }
-.sm-prog-folder-header:hover { background: #d4d0c8; color: #316ac5; }
-.sm-prog-folder-arrow { margin-left: auto; font-size: 10px; color: #555; }
-/* .sm-prog-folder-body (children wrapper) */
-.sm-prog-subfolder .sm-prog-folder-header { padding-left: 26px; }
-.sm-prog-subfolder .sm-prog-item { padding-left: 42px; }
+.sm-logoff-btn:hover { background: linear-gradient(180deg, #4a8aec 0%, #2e6ed8 100%); }
+.sm-footer-icon { display: inline-flex; align-items: center; line-height: 1; }
 
-.sm-prog-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 5px 14px 5px 14px; font-size: 11px; color: #1a1a1a;
-    cursor: pointer; white-space: nowrap;
+/* MRU: недавние программы (наполняется динамически) */
+.sm-mru-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 12px; cursor: pointer; white-space: nowrap;
 }
-.sm-prog-item-indent { padding-left: 28px; }
-.sm-prog-item:hover { background: linear-gradient(180deg, #2050c8 0%, #1840b0 100%); color: white; }
-.sm-prog-favicon { width: 16px; height: 16px; object-fit: contain; flex-shrink: 0; }
-.sm-prog-no-icon { width: 16px; height: 16px; font-size: 13px; flex-shrink: 0; display: inline-flex; align-items: center; }
+.sm-mru-item:hover { background: linear-gradient(180deg, #2166bd 0%, #1952a3 100%); }
+.sm-mru-item:hover .sm-mru-name { color: #fff; }
+.sm-mru-icon { width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.sm-mru-favicon { width: 24px; height: 24px; object-fit: contain; }
+.sm-mru-name { font-size: 11px; color: #1a1a1a; overflow: hidden; text-overflow: ellipsis; }
+
+/* ===================== ALL PROGRAMS — каскадный флаиут (как в XP) ===================== */
+.xp-context-menu.sm-cascade {
+    background: #fff;
+    border: 1px solid #aca899;
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+    padding: 2px;
+    min-width: 180px;
+}
+.xp-context-menu.sm-cascade .xp-ctx-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 18px 4px 8px; font-size: 11px; color: #1a1a1a;
+    border-radius: 0; white-space: nowrap;
+}
+.xp-context-menu.sm-cascade .xp-ctx-item:hover {
+    background: linear-gradient(180deg, #2050c8 0%, #1840b0 100%);
+    color: #fff;
+}
+.xp-context-menu.sm-cascade .xp-ctx-item .ctx-icon {
+    width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.xp-context-menu.sm-cascade .xp-ctx-item .ctx-arrow { margin-left: auto; font-size: 9px; color: #555; }
+.xp-context-menu.sm-cascade .xp-ctx-item:hover .ctx-arrow { color: #fff; }
+.xp-context-menu.sm-cascade .xp-ctx-separator { height: 1px; background: #d4d0c8; margin: 2px 4px; }
+.xp-context-menu.sm-cascade .xp-submenu {
+    background: #fff; border: 1px solid #aca899;
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.3); padding: 2px;
+    min-width: 160px; z-index: 1;
+}
+.sm-cascade-favicon { width: 16px; height: 16px; object-fit: contain; }
+
 
